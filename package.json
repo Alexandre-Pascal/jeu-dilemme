@@ -3,7 +3,15 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "build": "pnpm --filter @dilemme/shared build",
-    "lint": "pnpm -r lint"
+    "predev": "pnpm --filter @dilemme/shared build",
+    "dev": "pnpm --filter @dilemme/server dev",
+    "build": "pnpm --filter @dilemme/shared build && pnpm --filter @dilemme/server build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm --filter @dilemme/server test",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:migrate": "pnpm --filter @dilemme/server exec prisma migrate dev",
+    "db:seed": "pnpm --filter @dilemme/server exec prisma db seed",
+    "db:generate": "pnpm --filter @dilemme/server exec prisma generate"
   }
 }
