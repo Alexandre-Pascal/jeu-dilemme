@@ -1,0 +1,24 @@
+# Dépendances
+node_modules
+.pnpm-store
+
+# Build / sorties
+dist
+build
+.turbo
+*.tsbuildinfo
+
+# Environnement (ne jamais committer les secrets)
+.env
+.env.*
+!.env.example
+
+# Logs & couverture
+*.log
+npm-debug.log*
+coverage
+
+# OS & éditeurs
+.DS_Store
+Thumbs.db
+.idea
