@@ -29,17 +29,24 @@ export function HostPage() {
           : "Erreur réseau";
       setError(msg);
     };
+    const onConnectErr = (err: Error) => {
+      setError(err.message || "Impossible de joindre le serveur (lance `pnpm dev` côté API ?)");
+    };
     socket.on(SocketEvents.SERVER_STATE, onState);
     socket.on(SocketEvents.ERROR, onErr);
+    socket.on("connect_error", onConnectErr);
     return () => {
       socket.off(SocketEvents.SERVER_STATE, onState);
       socket.off(SocketEvents.ERROR, onErr);
-      socket.disconnect();
+      socket.off("connect_error", onConnectErr);
+      // Ne pas socket.disconnect() ici : en dev, React StrictMode remonte le composant
+      // et une déconnexion ferait perdre la session / les acks sans recréer la salle côté UI.
     };
   }, [socket]);
 
   const createRoom = useCallback(() => {
     setError(null);
+    if (!socket.connected) socket.connect();
     socket.emit(SocketEvents.HOST_CREATE, {}, (ack: unknown) => {
       const code = getHostCreateRoomCode(ack);
       if (code) setRoomCode(code);

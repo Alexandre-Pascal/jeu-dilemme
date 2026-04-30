@@ -37,7 +37,6 @@ export function PlayPage() {
     return () => {
       socket.off(SocketEvents.SERVER_STATE, onState);
       socket.off(SocketEvents.ERROR, onErr);
-      socket.disconnect();
     };
   }, [socket]);
 
