@@ -1,0 +1,9 @@
+{
+  "name": "jeu-dilemme",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "pnpm --filter @dilemme/shared build",
+    "lint": "pnpm -r lint"
+  }
+}

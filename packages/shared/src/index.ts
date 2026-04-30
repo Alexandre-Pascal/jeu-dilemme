@@ -1,0 +1,111 @@
+import { z } from "zod";
+
+/** Noms d'événements Socket.io (contrat client/serveur) */
+export const SocketEvents = {
+  ROOM_JOIN: "room:join",
+  HOST_CREATE: "host:create",
+  PLAYER_READY: "player:ready",
+  HOST_START_GAME: "host:startGame",
+  CONSTRAINT_SUBMIT: "constraint:submit",
+  VOTE_CAST: "vote:cast",
+  HOST_SET_TIMERS: "host:setTimers",
+  SERVER_STATE: "server:state",
+  ERROR: "error",
+} as const;
+
+export const GamePhaseSchema = z.enum([
+  "lobby",
+  "round_constraint",
+  "round_vote",
+  "round_subresult",
+  "game_end",
+]);
+export type GamePhase = z.infer<typeof GamePhaseSchema>;
+
+export const PlayerPublicSchema = z.object({
+  id: z.string(),
+  nickname: z.string(),
+  ready: z.boolean(),
+  score: z.number(),
+});
+export type PlayerPublic = z.infer<typeof PlayerPublicSchema>;
+
+export const LastVoteResultSchema = z.object({
+  yesPct: z.number(),
+  noPct: z.number(),
+  yesCount: z.number(),
+  noCount: z.number(),
+  abstainCount: z.number(),
+});
+export type LastVoteResult = z.infer<typeof LastVoteResultSchema>;
+
+export const RoundScoreRowSchema = z.object({
+  playerId: z.string(),
+  deltaPoints: z.number(),
+  distanceFrom50: z.number(),
+  masterclass: z.boolean(),
+});
+export type RoundScoreRow = z.infer<typeof RoundScoreRowSchema>;
+
+export const ServerStatePayloadSchema = z.object({
+  roomCode: z.string(),
+  phase: GamePhaseSchema,
+  phaseEndsAt: z.number().nullable(),
+  isHost: z.boolean(),
+  playerId: z.string().nullable(),
+  players: z.array(PlayerPublicSchema),
+  currentRoundIndex: z.number(),
+  totalRounds: z.number(),
+  currentOfferText: z.string().nullable(),
+  votingForPlayerId: z.string().nullable(),
+  revealedDilemma: z
+    .object({ offer: z.string(), constraint: z.string() })
+    .nullable(),
+  constraintOpen: z.boolean(),
+  voteOpen: z.boolean(),
+  lastVoteResult: LastVoteResultSchema.nullable(),
+  lastRoundScores: z.array(RoundScoreRowSchema).nullable(),
+  message: z.string().optional(),
+});
+export type ServerStatePayload = z.infer<typeof ServerStatePayloadSchema>;
+
+/** Client → serveur */
+export const HostCreatePayloadSchema = z.object({
+  nickname: z.string().min(1).max(32).optional(),
+});
+export const RoomJoinPayloadSchema = z.object({
+  roomCode: z.string().min(4).max(8),
+  nickname: z.string().min(1).max(32),
+});
+export const PlayerReadyPayloadSchema = z.object({
+  ready: z.boolean(),
+});
+export const ConstraintSubmitPayloadSchema = z.object({
+  text: z.string().max(500),
+});
+export const VoteCastPayloadSchema = z.object({
+  value: z.enum(["yes", "no"]),
+});
+export const HostSetTimersPayloadSchema = z.object({
+  constraintSeconds: z.number().int().min(15).max(300),
+  voteSeconds: z.number().int().min(15).max(300),
+});
+
+export const MASTERCLASS_BONUS = 5;
+export const PODIUM_POINTS = [3, 2, 1] as const;
+
+/** Distance au 50 % idéal (0 = parfait). yesRatio entre 0 et 1. */
+export function distanceFromIdeal5050(yesRatio: number): number {
+  return Math.abs(yesRatio * 100 - 50);
+}
+
+/** yesRatio = yes / (yes+no), abstentions exclues. Si pas de votes valides, ratio 0.5 (pire distance). */
+export function voteRatio(yes: number, no: number): number {
+  const t = yes + no;
+  if (t === 0) return 0.5;
+  return yes / t;
+}
+
+export function isPerfect5050(yes: number, no: number): boolean {
+  return yes === no && yes + no > 0;
+}
