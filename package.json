@@ -4,8 +4,8 @@
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "predev": "pnpm --filter @dilemme/shared build",
-    "dev": "pnpm --filter @dilemme/server dev",
-    "build": "pnpm --filter @dilemme/shared build && pnpm --filter @dilemme/server build",
+    "dev": "concurrently -n web,server -c cyan,magenta \"pnpm --filter @dilemme/web dev\" \"pnpm --filter @dilemme/server dev\"",
+    "build": "pnpm --filter @dilemme/shared build && pnpm --filter @dilemme/server build && pnpm --filter @dilemme/web build",
     "lint": "pnpm -r lint",
     "test": "pnpm --filter @dilemme/server test",
     "db:up": "docker compose up -d",
@@ -13,5 +13,8 @@
     "db:migrate": "pnpm --filter @dilemme/server exec prisma migrate dev",
     "db:seed": "pnpm --filter @dilemme/server exec prisma db seed",
     "db:generate": "pnpm --filter @dilemme/server exec prisma generate"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }
