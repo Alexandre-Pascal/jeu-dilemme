@@ -6,6 +6,7 @@ import {
   SocketEvents,
   type ServerStatePayload,
 } from "@dilemme/shared";
+import { getAckReason, getHostCreateRoomCode } from "../socket-ack";
 import { createSocket } from "../socket";
 
 export function HostPage() {
@@ -40,11 +41,11 @@ export function HostPage() {
   const createRoom = useCallback(() => {
     setError(null);
     socket.emit(SocketEvents.HOST_CREATE, {}, (ack: unknown) => {
-      if (typeof ack === "object" && ack && "ok" in ack && (ack as { ok: boolean }).ok) {
-        const code = (ack as { roomCode: string }).roomCode;
-        setRoomCode(code);
-      } else if (typeof ack === "object" && ack && "reason" in ack) {
-        setError(String((ack as { reason: string }).reason));
+      const code = getHostCreateRoomCode(ack);
+      if (code) setRoomCode(code);
+      else {
+        const reason = getAckReason(ack);
+        if (reason) setError(reason);
       }
     });
   }, [socket]);

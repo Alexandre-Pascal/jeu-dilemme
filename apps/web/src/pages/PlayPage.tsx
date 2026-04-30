@@ -6,6 +6,7 @@ import {
   SocketEvents,
   type ServerStatePayload,
 } from "@dilemme/shared";
+import { getAckReason, isRoomJoinOk } from "../socket-ack";
 import { createSocket } from "../socket";
 
 export function PlayPage() {
@@ -46,10 +47,10 @@ export function PlayPage() {
       SocketEvents.ROOM_JOIN,
       { roomCode: roomCode.trim(), nickname: nickname.trim() },
       (ack: unknown) => {
-        if (typeof ack === "object" && ack && "ok" in ack && (ack as { ok: boolean }).ok) {
-          setJoined(true);
-        } else if (typeof ack === "object" && ack && "reason" in ack) {
-          setError(String((ack as { reason: string }).reason));
+        if (isRoomJoinOk(ack)) setJoined(true);
+        else {
+          const reason = getAckReason(ack);
+          if (reason) setError(reason);
         }
       },
     );
