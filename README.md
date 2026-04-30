@@ -14,10 +14,12 @@ Monorepo **pnpm** : front **React + Vite**, serveur **Fastify + Socket.io**, **P
 git clone https://github.com/<ton-compte>/jeu-dilemme.git
 cd jeu-dilemme
 pnpm install
-cp .env.example .env
+cp .env.example .env   # obligatoire : Prisma et le serveur lisent DATABASE_URL depuis ce fichier à la racine
 ```
 
 ## Base de données locale
+
+Le fichier **`.env` à la racine** du repo (copié depuis `.env.example`) est chargé automatiquement par `pnpm db:*` et par le serveur en `pnpm dev` (`dotenv-cli`). Sans lui, Prisma affiche **P1012** (`Environment variable not found: DATABASE_URL`).
 
 ```bash
 pnpm db:up
@@ -26,6 +28,11 @@ pnpm db:seed      # 20 offres
 ```
 
 `DATABASE_URL` par défaut dans `.env.example` correspond au `docker-compose.yml`.
+
+## Dépannage (console navigateur)
+
+- **`evmAsk.js` / `ethereum` / extension `chrome-extension://…`** : vient d’une **extension** (souvent portefeuille crypto), pas de l’app. Tu peux l’ignorer ou désactiver l’extension sur `localhost`.
+- **`WebSocket … failed` sur le port 3001** : le **serveur** ne tourne pas, a crashé ou le port est bloqué. Vérifie la sortie du terminal `pnpm dev` (process `server`). Avec un **`.env` à la racine** contenant `DATABASE_URL`, le serveur charge la base au **démarrage de partie** ; sans ça, Prisma plante.
 
 ## Développement
 
