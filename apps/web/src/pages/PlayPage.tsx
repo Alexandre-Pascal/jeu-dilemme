@@ -112,18 +112,33 @@ export function PlayPage() {
           </p>
         ) : null}
         <div className="d-card d-card--flush">
-          <label className="d-label">
+          <h2 className="d-join-card-title">Rejoindre la partie</h2>
+          <p className="d-join-hint">Le code à 6 caractères est affiché sur l’écran du maître du jeu.</p>
+          <label className="d-label" htmlFor="join-room-code">
             Code salle
             <input
-              className="d-input"
+              id="join-room-code"
+              className="d-input d-input--roomcode"
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
               autoCapitalize="characters"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="Ex. AB12CD"
+              inputMode="text"
             />
           </label>
-          <label className="d-label">
+          <label className="d-label" htmlFor="join-nickname">
             Pseudo
-            <input className="d-input" value={nickname} onChange={(e) => setNickname(e.target.value)} maxLength={32} />
+            <input
+              id="join-nickname"
+              className="d-input"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              maxLength={32}
+              autoComplete="username"
+              placeholder="Ton nom dans la partie"
+            />
           </label>
           <button
             type="button"
