@@ -284,74 +284,110 @@ export function PlayPage() {
       ) : null}
 
       {recapPayload && state ? (
-        <section key="recap" className="d-card d-phase-enter">
-          <p className="d-muted" style={{ margin: 0, fontSize: "0.9rem" }}>
-            Manche {recapPayload.roundIndex + 1} sur {state.totalRounds}
-          </p>
-          <h2 style={{ margin: "0.2rem 0 1rem", fontFamily: "var(--font-display)", fontSize: "1.35rem" }}>Récap</h2>
+        <section key="recap" className="d-card d-phase-enter d-recap">
+          <header className="d-recap-header">
+            <span className="d-recap-round">
+              Manche {recapPayload.roundIndex + 1} / {state.totalRounds}
+            </span>
+            <h2 className="d-recap-title">Récap</h2>
+          </header>
 
           <div className="d-recap-offer">
             <span className="d-kicker">L&apos;offre</span>
             <p>{recapPayload.offerText}</p>
           </div>
 
-          <p className="d-section-title">Les votes sur chaque dilemme</p>
-          <p className="d-section-hint">
-            Un indicateur bas = vote très équilibré entre Oui et Non. Un indicateur haut = vote très à fond.
-          </p>
-          <div className="d-recap-authors">
-            {recapPayload.authors.map((a, i) => (
-              <div key={a.playerId} className="d-recap-author">
-                <div className="d-recap-author-meta">
-                  Dilemme n° {i + 1} / {recapPayload.authors.length}
-                </div>
-                <div className="d-recap-author-name">{a.nickname}</div>
-                <div className="d-recap-author-stat">
-                  Indicateur d&apos;équilibre : <strong>{a.distanceFrom50.toFixed(1)}</strong>
-                </div>
-                {a.masterclass ? (
-                  <div className="d-pill--warn">Masterclass — vote 50/50 exact · +5 pts bonus au classement</div>
-                ) : null}
-              </div>
-            ))}
+          <div className="d-recap-block">
+            <h3 className="d-recap-block__title">Votes sur chaque dilemme</h3>
+            <p className="d-recap-block__hint">
+              Jauge vers la droite = vote plus tranché (loin du 50/50). À gauche = plus équilibré.
+            </p>
+            <ul className="d-recap-votes">
+              {recapPayload.authors.map((a, i) => {
+                const polarPct = Math.max(5, Math.min(100, (a.distanceFrom50 / 50) * 100));
+                return (
+                  <li key={a.playerId} className="d-recap-vote">
+                    <div className="d-recap-vote__head">
+                      <span className="d-recap-vote__badge" aria-hidden>
+                        {i + 1}
+                      </span>
+                      <span className="d-recap-vote__meta">
+                        Dilemme {i + 1} / {recapPayload.authors.length}
+                      </span>
+                      <span className="d-recap-vote__name">{a.nickname}</span>
+                    </div>
+                    <div
+                      className="d-recap-meter"
+                      role="img"
+                      aria-label={`Écart au partage 50/50 : ${a.distanceFrom50.toFixed(1)} points`}
+                    >
+                      <div className="d-recap-meter__labels" aria-hidden>
+                        <span>Équilibré</span>
+                        <span>À fond</span>
+                      </div>
+                      <div className="d-recap-meter__track">
+                        <div className="d-recap-meter__fill" style={{ width: `${polarPct}%` }} />
+                      </div>
+                      <p className="d-recap-meter__caption">
+                        Écart 50/50 : <strong>{a.distanceFrom50.toFixed(1)}</strong>
+                      </p>
+                    </div>
+                    {a.masterclass ? (
+                      <p className="d-recap-masterclass">Masterclass — 50/50 exact · +5 pts au classement</p>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
           </div>
 
-          <p className="d-section-title">Points après cette manche</p>
-          <div className="d-table-wrap">
-            <table className="d-table-recap">
-              <thead>
-                <tr>
-                  <th>Joueur</th>
-                  <th>Cette manche</th>
-                  <th className="d-table-recap__num">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recapPayload.pointsThisRound.map((r) => (
-                  <tr key={r.playerId}>
-                    <td>{r.nickname}</td>
-                    <td>{r.delta > 0 ? `+${r.delta}` : String(r.delta)}</td>
-                    <td className="d-table-recap__num">{r.totalScore}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="d-recap-block d-recap-block--scores">
+            <h3 className="d-recap-block__title" id="recap-scores-heading">
+              Points après cette manche
+            </h3>
+            <div className="d-recap-scores" role="region" aria-labelledby="recap-scores-heading">
+              <div className="d-recap-scores-head" aria-hidden>
+                <span>Joueur</span>
+                <span>Manche</span>
+                <span>Total</span>
+              </div>
+              <ul className="d-recap-scores-list">
+                {recapPayload.pointsThisRound.map((r) => {
+                  const self = r.playerId === state.playerId;
+                  const deltaStr = r.delta > 0 ? `+${r.delta}` : String(r.delta);
+                  const deltaClass =
+                    r.delta > 0 ? "d-recap-score-delta--up" : r.delta < 0 ? "d-recap-score-delta--down" : "";
+                  return (
+                    <li
+                      key={r.playerId}
+                      className={`d-recap-score-row${self ? " d-recap-score-row--self" : ""}`.trim()}
+                      aria-label={`${r.nickname}, ${deltaStr} cette manche, total ${r.totalScore}`}
+                    >
+                      <span className="d-recap-score-name">
+                        {r.nickname}
+                        {self ? <span className="d-recap-score-you">Toi</span> : null}
+                      </span>
+                      <span className={`d-recap-score-delta ${deltaClass}`.trim()}>{deltaStr}</span>
+                      <span className="d-recap-score-total">{r.totalScore}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </div>
 
           {state.recapSkipProgress ? (
-            <div className="d-callout--skip">
-              <p style={{ margin: 0, fontSize: "0.95rem", color: "#475569" }}>
-                Pour passer avant la fin du chrono :{" "}
+            <div className="d-recap-skip">
+              <p className="d-recap-skip__lead">
+                Passer avant la fin du chrono :{" "}
                 <strong>
                   {state.recapSkipProgress.votedCount} / {state.recapSkipProgress.requiredCount}
                 </strong>{" "}
-                joueurs ont voté.
+                joueurs.
               </p>
               {state.playerId ? (
                 state.recapSkipProgress.selfHasSkipped ? (
-                  <p style={{ margin: "0.65rem 0 0", fontSize: "0.9rem", color: "#16a34a", fontWeight: 600 }}>
-                    Tu as voté pour passer — en attente des autres…
-                  </p>
+                  <p className="d-recap-skip__status">Tu as voté pour passer — en attente des autres…</p>
                 ) : (
                   <button type="button" onClick={voteSkipRecap} className="d-btn--skip">
                     Passer le récap
@@ -362,7 +398,7 @@ export function PlayPage() {
           ) : null}
 
           {endsIn !== null ? (
-            <p className="d-callout--muted" style={{ marginTop: "1rem" }}>
+            <p className="d-recap-next">
               Suite automatiquement dans <strong>{endsIn}s</strong> si personne ne valide avant.
             </p>
           ) : null}

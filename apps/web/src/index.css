@@ -524,14 +524,6 @@ button:disabled {
   color: #475569;
 }
 
-.d-callout--skip {
-  margin-top: 1.1rem;
-  padding: 1rem;
-  border-radius: var(--radius-md);
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-
 /* --- Lists --- */
 .d-list {
   margin: 0;
@@ -691,117 +683,342 @@ button:disabled {
   vertical-align: middle;
 }
 
-/* --- Recap (shared styles) --- */
-.d-recap-offer {
-  padding: 1rem 1.1rem;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #faf5ff 0%, #f4f4f5 100%);
-  border: 1px solid #e9d5ff;
+/* --- Récap de manche --- */
+.d-recap {
+  --recap-vote-bg: linear-gradient(165deg, #ffffff 0%, #f8fafc 100%);
 }
 
-.d-recap-offer p {
-  margin: 0.4rem 0 0;
-  font-size: 1.05rem;
-  line-height: 1.45;
+.d-recap-header {
+  margin: 0 0 1.15rem;
+}
+
+.d-recap-round {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #5b21b6;
+  background: linear-gradient(135deg, #ede9fe 0%, #fae8ff 100%);
+  border: 1px solid rgba(124, 58, 237, 0.22);
+}
+
+.d-recap-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 4.2vw, 1.65rem);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+  margin: 0.45rem 0 0;
   color: var(--text);
 }
 
-.d-recap-authors {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
+.d-recap--compact .d-recap-title {
+  font-size: 1.2rem;
 }
 
-.d-recap-author {
-  padding: 0.85rem 1rem;
+.d-recap-offer {
+  padding: 1.1rem 1.2rem;
   border-radius: var(--radius-md);
-  background: #fafafa;
-  border: 1px solid #e4e4e7;
+  background: linear-gradient(125deg, #faf5ff 0%, #ffffff 50%, #f8fafc 100%);
+  border: 1px solid rgba(124, 58, 237, 0.16);
+  border-left: 4px solid var(--primary);
+  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.07);
 }
 
-.d-recap-author-meta {
-  font-size: 0.75rem;
-  color: #a1a1aa;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.d-recap-offer p {
+  margin: 0;
+  font-size: 1.06rem;
+  line-height: 1.5;
+  color: var(--text);
 }
 
-.d-recap-author-name {
-  font-weight: 800;
-  font-size: 1.05rem;
-  margin-top: 0.15rem;
+.d-recap-block {
+  margin-top: 1.35rem;
 }
 
-.d-recap-author-stat {
-  font-size: 0.92rem;
-  color: #3f3f46;
-  margin-top: 0.35rem;
+.d-recap-block--scores {
+  margin-top: 1.5rem;
 }
 
-.d-pill--warn {
-  margin-top: 0.45rem;
-  padding: 0.35rem 0.5rem;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #9a3412;
-  background: var(--warn-soft);
-  display: inline-block;
+.d-recap-block__title {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 900;
+  margin: 0 0 0.35rem;
+  color: var(--text);
 }
 
-.d-table-wrap {
-  overflow-x: auto;
-  border-radius: var(--radius-md);
-  border: 1px solid #e4e4e7;
-}
-
-.d-table-recap {
-  width: 100%;
-  border-collapse: collapse;
+.d-recap--compact .d-recap-block__title {
   font-size: 0.95rem;
 }
 
-.d-table-recap thead tr {
-  background: #fafafa;
-}
-
-.d-table-recap th {
-  text-align: left;
-  padding: 0.65rem 0.85rem;
-  font-weight: 800;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #71717a;
-  border-bottom: 1px solid #e4e4e7;
-}
-
-.d-table-recap th.d-table-recap__num {
-  text-align: right;
-}
-
-.d-table-recap td {
-  padding: 0.65rem 0.85rem;
-  border-bottom: 1px solid #f4f4f5;
-  color: #27272a;
-}
-
-.d-table-recap td.d-table-recap__num {
-  text-align: right;
-  font-weight: 800;
-}
-
-.d-section-title {
-  margin: 1.25rem 0 0.4rem;
-  font-weight: 800;
-  font-size: 1rem;
-}
-
-.d-section-hint {
-  margin: 0 0 0.75rem;
-  color: var(--text-muted);
-  font-size: 0.88rem;
+.d-recap-block__hint {
+  margin: 0 0 1rem;
+  font-size: 0.86rem;
   line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.d-recap-votes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.d-recap--compact .d-recap-votes {
+  gap: 0.65rem;
+}
+
+.d-recap-vote {
+  padding: 1rem 1.05rem;
+  border-radius: var(--radius-md);
+  background: var(--recap-vote-bg);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+}
+
+.d-recap--compact .d-recap-vote {
+  padding: 0.75rem 0.85rem;
+}
+
+.d-recap-vote__head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  gap: 0.15rem 0.65rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.d-recap-vote__badge {
+  grid-row: 1 / span 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 1rem;
+  color: var(--primary);
+  background: linear-gradient(145deg, #ede9fe, #f5f3ff);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.d-recap-vote__meta {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.d-recap-vote__name {
+  font-weight: 900;
+  font-size: 1.02rem;
+  color: var(--text);
+  min-width: 0;
+}
+
+.d-recap-meter__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.d-recap-meter__track {
+  height: 10px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.d-recap-meter__fill {
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #a78bfa 0%, var(--primary) 45%, #c026d3 100%);
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.35);
+  transition: width var(--transition-med);
+}
+
+.d-recap-meter__caption {
+  margin: 0.45rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.d-recap-meter__caption strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.d-recap-masterclass {
+  margin: 0.65rem 0 0;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #9a3412;
+  background: var(--warn-soft);
+  border: 1px solid #fed7aa;
+}
+
+.d-recap-scores {
+  border-radius: var(--radius-md);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+}
+
+.d-recap-scores-head {
+  display: grid;
+  grid-template-columns: 1fr minmax(4.5rem, auto) minmax(3.25rem, auto);
+  gap: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.d-recap-scores-head span:nth-child(2),
+.d-recap-scores-head span:nth-child(3) {
+  text-align: right;
+}
+
+.d-recap-scores-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.d-recap-score-row {
+  display: grid;
+  grid-template-columns: 1fr minmax(4.5rem, auto) minmax(3.25rem, auto);
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.95rem;
+}
+
+.d-recap-score-row:last-child {
+  border-bottom: none;
+}
+
+.d-recap-score-name {
+  font-weight: 800;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.d-recap-score-you {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+  background: var(--primary);
+  color: #fff;
+}
+
+.d-recap-score-delta {
+  text-align: right;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.d-recap-score-delta--up {
+  color: #15803d;
+}
+
+.d-recap-score-delta--down {
+  color: #b91c1c;
+}
+
+.d-recap-score-total {
+  text-align: right;
+  font-weight: 900;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--primary);
+}
+
+.d-recap-score-row--self {
+  background: linear-gradient(90deg, #faf5ff 0%, #f5f3ff 100%);
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.d-recap-skip {
+  margin-top: 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+}
+
+.d-recap-skip__lead {
+  margin: 0;
+  font-size: 0.92rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.d-recap-skip__status {
+  margin: 0.65rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.d-recap-skip .d-btn--skip {
+  margin-top: 0.75rem;
+}
+
+.d-recap-next {
+  margin: 1.1rem 0 0;
+  padding: 0.85rem 1rem;
+  text-align: center;
+  border-radius: var(--radius-md);
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.d-recap-host-skip {
+  margin: 1rem 0 0;
+  padding: 0;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+
+.d-host-recap-inner {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
 }
 
 /* --- Home role cards --- */
@@ -908,38 +1125,6 @@ button:disabled {
   font-weight: 800;
   font-size: 0.85rem;
   color: var(--primary);
-}
-
-/* --- Host recap inner --- */
-.d-host-recap-inner {
-  margin-top: 1rem;
-  padding: 1rem;
-  border-radius: var(--radius-lg);
-  background: #fafafa;
-  border: 1px solid #e4e4e7;
-}
-
-.d-host-recap-offer {
-  padding: 0.75rem;
-  border-radius: var(--radius-md);
-  background: #faf5ff;
-  border: 1px solid #e9d5ff;
-  margin-bottom: 0.75rem;
-}
-
-.d-host-recap-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 0.75rem;
-}
-
-.d-host-recap-row {
-  padding: 0.5rem 0.65rem;
-  border-radius: var(--radius-sm);
-  background: #fff;
-  border: 1px solid #e4e4e7;
-  font-size: 0.88rem;
 }
 
 .d-offer-line {

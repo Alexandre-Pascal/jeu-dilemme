@@ -76,6 +76,9 @@ export function HostPage() {
   const allReady =
     state && state.players.length > 0 && state.players.every((p) => p.ready);
 
+  const hostRoundRecap =
+    state && state.phase === "round_recap" && state.roundRecap ? state.roundRecap : null;
+
   return (
     <main className="d-page">
       <header className="d-header">
@@ -170,53 +173,89 @@ export function HostPage() {
                 (abstentions : {state.lastVoteResult.abstainCount})
               </p>
             ) : null}
-            {state.phase === "round_recap" && state.roundRecap ? (
-              <div className="d-host-recap-inner">
-                <p className="d-muted" style={{ margin: 0, fontSize: "0.85rem" }}>
-                  Manche {state.roundRecap.roundIndex + 1} sur {state.totalRounds}
-                </p>
-                <h3 style={{ margin: "0.2rem 0 0.75rem" }}>Récap</h3>
-                <div className="d-host-recap-offer">
+            {hostRoundRecap ? (
+              <div className="d-host-recap-inner d-recap d-recap--compact">
+                <header className="d-recap-header">
+                  <span className="d-recap-round">
+                    Manche {hostRoundRecap.roundIndex + 1} sur {state.totalRounds}
+                  </span>
+                  <h3 className="d-recap-title">Récap</h3>
+                </header>
+                <div className="d-recap-offer">
                   <span className="d-kicker">L&apos;offre</span>
-                  <p style={{ margin: "0.35rem 0 0", fontSize: "0.95rem" }}>{state.roundRecap.offerText}</p>
+                  <p>{hostRoundRecap.offerText}</p>
                 </div>
-                <p className="d-section-title" style={{ marginTop: "0.5rem" }}>
-                  Votes (indicateur bas = équilibré)
-                </p>
-                <div className="d-host-recap-rows">
-                  {state.roundRecap.authors.map((a, i) => (
-                    <div key={a.playerId} className="d-host-recap-row">
-                      <span className="d-muted" style={{ fontSize: "0.72rem" }}>
-                        n°{i + 1}
-                      </span>{" "}
-                      <strong>{a.nickname}</strong> — {a.distanceFrom50.toFixed(1)}
-                      {a.masterclass ? <span className="d-masterclass"> · Masterclass +5</span> : null}
+                <div className="d-recap-block">
+                  <h4 className="d-recap-block__title">Votes sur chaque dilemme</h4>
+                  <p className="d-recap-block__hint">
+                    Jauge vers la droite = vote plus tranché. À gauche = plus équilibré.
+                  </p>
+                  <ul className="d-recap-votes">
+                    {hostRoundRecap.authors.map((a, i) => {
+                      const polarPct = Math.max(5, Math.min(100, (a.distanceFrom50 / 50) * 100));
+                      return (
+                        <li key={a.playerId} className="d-recap-vote">
+                          <div className="d-recap-vote__head">
+                            <span className="d-recap-vote__badge" aria-hidden>
+                              {i + 1}
+                            </span>
+                            <span className="d-recap-vote__meta">
+                              Dilemme {i + 1} / {hostRoundRecap.authors.length}
+                            </span>
+                            <span className="d-recap-vote__name">{a.nickname}</span>
+                          </div>
+                          <div
+                            className="d-recap-meter"
+                            role="img"
+                            aria-label={`Écart au partage 50/50 : ${a.distanceFrom50.toFixed(1)} points`}
+                          >
+                            <div className="d-recap-meter__labels" aria-hidden>
+                              <span>Équilibré</span>
+                              <span>À fond</span>
+                            </div>
+                            <div className="d-recap-meter__track">
+                              <div className="d-recap-meter__fill" style={{ width: `${polarPct}%` }} />
+                            </div>
+                            <p className="d-recap-meter__caption">
+                              Écart 50/50 : <strong>{a.distanceFrom50.toFixed(1)}</strong>
+                            </p>
+                          </div>
+                          {a.masterclass ? (
+                            <p className="d-recap-masterclass">Masterclass — 50/50 exact · +5 pts</p>
+                          ) : null}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                <div className="d-recap-block d-recap-block--scores">
+                  <h4 className="d-recap-block__title" id="host-recap-scores-heading">
+                    Points après cette manche
+                  </h4>
+                  <div className="d-recap-scores" role="region" aria-labelledby="host-recap-scores-heading">
+                    <div className="d-recap-scores-head" aria-hidden>
+                      <span>Joueur</span>
+                      <span>Manche</span>
+                      <span>Total</span>
                     </div>
-                  ))}
-                </div>
-                <p className="d-section-title">Points</p>
-                <div className="d-table-wrap">
-                  <table className="d-table-recap">
-                    <thead>
-                      <tr>
-                        <th>Joueur</th>
-                        <th>Manche</th>
-                        <th className="d-table-recap__num">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {state.roundRecap.pointsThisRound.map((r) => (
-                        <tr key={r.playerId}>
-                          <td>{r.nickname}</td>
-                          <td>{r.delta > 0 ? `+${r.delta}` : r.delta}</td>
-                          <td className="d-table-recap__num">{r.totalScore}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                    <ul className="d-recap-scores-list">
+                      {hostRoundRecap.pointsThisRound.map((r) => {
+                        const deltaStr = r.delta > 0 ? `+${r.delta}` : String(r.delta);
+                        const deltaClass =
+                          r.delta > 0 ? "d-recap-score-delta--up" : r.delta < 0 ? "d-recap-score-delta--down" : "";
+                        return (
+                          <li key={r.playerId} className="d-recap-score-row">
+                            <span className="d-recap-score-name">{r.nickname}</span>
+                            <span className={`d-recap-score-delta ${deltaClass}`.trim()}>{deltaStr}</span>
+                            <span className="d-recap-score-total">{r.totalScore}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
                 </div>
                 {state.recapSkipProgress ? (
-                  <p className="d-muted" style={{ marginTop: "0.65rem", marginBottom: 0, fontSize: "0.85rem" }}>
+                  <p className="d-recap-host-skip">
                     Votes pour passer le récap :{" "}
                     <strong>
                       {state.recapSkipProgress.votedCount} / {state.recapSkipProgress.requiredCount}
