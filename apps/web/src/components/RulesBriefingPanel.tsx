@@ -41,21 +41,22 @@ export function RulesBriefingPanel({ isHost, onDismiss }: Props) {
           </h3>
           <div className="d-rules-podium">
             <div className="d-rules-podium__cell">
-              <span className="d-rules-podium__rk">1</span>
-              <span className="d-rules-podium__pt">3</span>
+              <span className="d-rules-podium__rk">1er</span>
+              <span className="d-rules-podium__pt">3 points</span>
             </div>
             <div className="d-rules-podium__cell">
-              <span className="d-rules-podium__rk">2</span>
-              <span className="d-rules-podium__pt">2</span>
+              <span className="d-rules-podium__rk">2e</span>
+              <span className="d-rules-podium__pt">2 points</span>
             </div>
             <div className="d-rules-podium__cell">
-              <span className="d-rules-podium__rk">3</span>
-              <span className="d-rules-podium__pt">1</span>
+              <span className="d-rules-podium__rk">3e</span>
+              <span className="d-rules-podium__pt">1 point</span>
             </div>
           </div>
           <p className="d-rules-tile-p">
-            Fin de manche : du plus proche au plus loin du 50/50. Égalité → même rang.{" "}
-            <span className="d-rules-badge">+5</span> si Oui = Non exact.
+            Fin de manche : du plus proche au plus loin du 50/50. Égalité → même rang. Bonus{" "}
+            <span className="d-rules-badge">+5</span> si le vote est <strong>à voix égales</strong> : autant de{" "}
+            <strong>Oui</strong> que de <strong>Non</strong> comptés (ex.&nbsp;4 contre 4).
           </p>
         </section>
       </div>
