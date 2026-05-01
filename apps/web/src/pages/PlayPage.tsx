@@ -358,12 +358,12 @@ export function PlayPage() {
       {state?.phase === "game_end" ? (
         <section style={card}>
           <h2>Fin de partie</h2>
-          <ol>
+          <ol style={{ paddingLeft: "1.25rem", margin: 0 }}>
             {[...state.players]
               .sort((a, b) => b.score - a.score)
-              .map((p, i) => (
+              .map((p) => (
                 <li key={p.id}>
-                  {i + 1}. {p.nickname} — {p.score} pts
+                  {p.nickname} — {p.score} pts
                 </li>
               ))}
           </ol>
