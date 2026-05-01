@@ -76,7 +76,8 @@ io.on("connection", (socket: GameSocket) => {
       return;
     }
     let room: GameRoom;
-    room = GameRoom.create(socket.id, () => broadcastRoom(room));
+    const planned = parsed.data.roundCount ?? null;
+    room = GameRoom.create(socket.id, () => broadcastRoom(room), planned);
     roomsByCode.set(room.roomCode, room);
     socket.join(room.roomCode);
     socket.data.roomCode = room.roomCode;

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  HOST_ROUND_COUNT_MAX,
+  HOST_ROUND_COUNT_MIN,
   HostSetTimersPayloadSchema,
   ServerStatePayloadSchema,
   SocketEvents,
@@ -15,6 +17,8 @@ export function HostPage() {
   const [error, setError] = useState<string | null>(null);
   const [constraintSec, setConstraintSec] = useState(60);
   const [voteSec, setVoteSec] = useState(60);
+  const [createRoundCount, setCreateRoundCount] = useState(6);
+  const [createUseAllOffers, setCreateUseAllOffers] = useState(false);
 
   useEffect(() => {
     const onState = (raw: unknown) => {
@@ -44,7 +48,8 @@ export function HostPage() {
   const createRoom = useCallback(() => {
     setError(null);
     if (!socket.connected) socket.connect();
-    socket.emit(SocketEvents.HOST_CREATE, {}, (ack: unknown) => {
+    const payload = createUseAllOffers ? {} : { roundCount: createRoundCount };
+    socket.emit(SocketEvents.HOST_CREATE, payload, (ack: unknown) => {
       const code = getHostCreateRoomCode(ack);
       if (code) setRoomCode(code);
       else {
@@ -52,7 +57,7 @@ export function HostPage() {
         if (reason) setError(reason);
       }
     });
-  }, [socket]);
+  }, [socket, createRoundCount, createUseAllOffers]);
 
   const startGame = useCallback(() => {
     setError(null);
@@ -93,9 +98,48 @@ export function HostPage() {
       ) : null}
 
       {!roomCode ? (
-        <button type="button" onClick={createRoom} className="d-btn d-btn--primary d-btn--lg">
-          Créer une salle
-        </button>
+        <section className="d-card d-host-create">
+          <h2 className="d-host-create-title">Créer une salle</h2>
+          <p className="d-muted d-host-create-lead">
+            Une manche = une offre tirée de la base ; chaque joueur écrit une contrainte, puis tout le monde vote sur
+            chaque dilemme.
+          </p>
+          <div className="d-host-create-field">
+            <label className="d-checkbox-label">
+              <input
+                type="checkbox"
+                checked={createUseAllOffers}
+                onChange={(e) => setCreateUseAllOffers(e.target.checked)}
+              />
+              <span>Jouer toutes les offres disponibles en base</span>
+            </label>
+          </div>
+          {!createUseAllOffers ? (
+            <label className="d-label-row d-host-create-field">
+              Nombre de manches (offres)
+              <input
+                type="number"
+                min={HOST_ROUND_COUNT_MIN}
+                max={HOST_ROUND_COUNT_MAX}
+                value={createRoundCount}
+                onChange={(e) => {
+                  const n = Number.parseInt(e.target.value, 10);
+                  if (!Number.isFinite(n)) return;
+                  setCreateRoundCount(Math.min(HOST_ROUND_COUNT_MAX, Math.max(HOST_ROUND_COUNT_MIN, n)));
+                }}
+                className="d-input d-input--narrow"
+              />
+            </label>
+          ) : null}
+          <p className="d-muted d-host-create-hint">
+            {createUseAllOffers
+              ? `Au lancement, la partie utilisera jusqu’à toutes les offres (dans l’ordre).`
+              : `La partie s’arrêtera après ${createRoundCount} manche${createRoundCount > 1 ? "s" : ""} (ou moins s’il y a moins d’offres en base).`}
+          </p>
+          <button type="button" onClick={createRoom} className="d-btn d-btn--primary d-btn--lg d-btn--block">
+            Créer la salle
+          </button>
+        </section>
       ) : (
         <div className="d-card d-card--flush">
           <p className="d-muted" style={{ marginTop: 0 }}>
@@ -105,6 +149,13 @@ export function HostPage() {
             <span className="d-code">{roomCode}</span>
           </p>
           <p className="d-muted">Les joueurs ouvrent « Joueur » et entrent ce code.</p>
+          {state?.phase === "lobby" ? (
+            <p className="d-muted d-host-room-manches">
+              {state.plannedRoundCount == null
+                ? "Manches au lancement : toutes les offres disponibles en base."
+                : `Manches au lancement : ${state.plannedRoundCount} maximum (tronqué si moins d’offres en base).`}
+            </p>
+          ) : null}
         </div>
       )}
 

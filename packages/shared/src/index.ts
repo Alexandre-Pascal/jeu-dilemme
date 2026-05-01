@@ -84,6 +84,10 @@ export const RecapSkipProgressSchema = z.object({
 });
 export type RecapSkipProgress = z.infer<typeof RecapSkipProgressSchema>;
 
+/** Nombre d’offres / manches : borne à la création de salle (MJ). */
+export const HOST_ROUND_COUNT_MIN = 1;
+export const HOST_ROUND_COUNT_MAX = 50;
+
 export const ServerStatePayloadSchema = z.object({
   roomCode: z.string(),
   phase: GamePhaseSchema,
@@ -93,6 +97,11 @@ export const ServerStatePayloadSchema = z.object({
   players: z.array(PlayerPublicSchema),
   currentRoundIndex: z.number(),
   totalRounds: z.number(),
+  /**
+   * Limite choisie à la création de salle (nombre d’offres max) ; `null` = toutes les offres en base au démarrage.
+   * En lobby avant lancement, `totalRounds` peut refléter cette valeur ; après `startGame`, `totalRounds` = offres réellement chargées.
+   */
+  plannedRoundCount: z.number().int().min(HOST_ROUND_COUNT_MIN).max(HOST_ROUND_COUNT_MAX).nullable(),
   currentOfferText: z.string().nullable(),
   votingForPlayerId: z.string().nullable(),
   revealedDilemma: z
@@ -115,6 +124,8 @@ export type ServerStatePayload = z.infer<typeof ServerStatePayloadSchema>;
 /** Client → serveur */
 export const HostCreatePayloadSchema = z.object({
   nickname: z.string().min(1).max(32).optional(),
+  /** Si absent : toutes les offres disponibles en base au lancement. Sinon, au plus ce nombre d’offres (manches). */
+  roundCount: z.number().int().min(HOST_ROUND_COUNT_MIN).max(HOST_ROUND_COUNT_MAX).optional(),
 });
 export const RoomJoinPayloadSchema = z.object({
   roomCode: z.string().min(4).max(8),

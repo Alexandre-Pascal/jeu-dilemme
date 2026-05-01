@@ -33,6 +33,8 @@ export class GameRoom {
   /** Pause « récap points » après chaque manche complète, avant l’offre suivante. */
   recapSeconds = 15;
   offers: string[] = [];
+  /** Limite MJ à la création de salle ; `null` = charger toutes les offres au démarrage. */
+  plannedRoundCount: number | null = null;
   currentRoundIndex = 0;
   constraints = new Map<string, string>();
   /** Index dans `players` : pour quel auteur on vote */
@@ -52,8 +54,10 @@ export class GameRoom {
     this.broadcast = broadcast;
   }
 
-  static create(hostSocketId: string, broadcast: () => void): GameRoom {
-    return new GameRoom(makeRoomCode(), hostSocketId, broadcast);
+  static create(hostSocketId: string, broadcast: () => void, plannedRoundCount: number | null = null): GameRoom {
+    const room = new GameRoom(makeRoomCode(), hostSocketId, broadcast);
+    room.plannedRoundCount = plannedRoundCount;
+    return room;
   }
 
   clearPhaseTimer(): void {
@@ -145,7 +149,11 @@ export class GameRoom {
         score: p.score,
       })),
       currentRoundIndex: this.currentRoundIndex,
-      totalRounds: this.offers.length || 20,
+      totalRounds:
+        this.offers.length > 0
+          ? this.offers.length
+          : this.plannedRoundCount ?? 0,
+      plannedRoundCount: this.plannedRoundCount,
       currentOfferText: offer,
       votingForPlayerId: votingPlayer?.id ?? null,
       revealedDilemma,
@@ -228,9 +236,13 @@ export class GameRoom {
   async startGame(loadOffers: () => Promise<string[]>): Promise<{ ok: true } | { ok: false; reason: string }> {
     if (this.players.length < 1) return { ok: false, reason: "Au moins un joueur requis" };
     if (!this.players.every((p) => p.ready)) return { ok: false, reason: "Tous les joueurs doivent être prêts" };
-    const offers = await loadOffers();
-    if (offers.length === 0) return { ok: false, reason: "Aucune offre en base (lance les migrations + seed)" };
-    this.offers = offers;
+    const allOffers = await loadOffers();
+    if (allOffers.length === 0) return { ok: false, reason: "Aucune offre en base (lance les migrations + seed)" };
+    const cap =
+      this.plannedRoundCount != null
+        ? Math.min(Math.max(1, this.plannedRoundCount), allOffers.length)
+        : allOffers.length;
+    this.offers = allOffers.slice(0, cap);
     this.currentRoundIndex = 0;
     this.phase = "round_constraint";
     this.constraints.clear();
