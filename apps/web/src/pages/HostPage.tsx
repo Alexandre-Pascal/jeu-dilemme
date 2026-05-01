@@ -185,6 +185,32 @@ export function HostPage() {
                   <span className="d-kicker">L&apos;offre</span>
                   <p>{hostRoundRecap.offerText}</p>
                 </div>
+                <div className="d-recap-block d-recap-block--scores">
+                  <h4 className="d-recap-block__title" id="host-recap-scores-heading">
+                    Points après cette manche
+                  </h4>
+                  <div className="d-recap-scores" role="region" aria-labelledby="host-recap-scores-heading">
+                    <div className="d-recap-scores-head" aria-hidden>
+                      <span>Joueur</span>
+                      <span>Manche</span>
+                      <span>Total</span>
+                    </div>
+                    <ul className="d-recap-scores-list">
+                      {hostRoundRecap.pointsThisRound.map((r) => {
+                        const deltaStr = r.delta > 0 ? `+${r.delta}` : String(r.delta);
+                        const deltaClass =
+                          r.delta > 0 ? "d-recap-score-delta--up" : r.delta < 0 ? "d-recap-score-delta--down" : "";
+                        return (
+                          <li key={r.playerId} className="d-recap-score-row">
+                            <span className="d-recap-score-name">{r.nickname}</span>
+                            <span className={`d-recap-score-delta ${deltaClass}`.trim()}>{deltaStr}</span>
+                            <span className="d-recap-score-total">{r.totalScore}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </div>
                 <div className="d-recap-block">
                   <h4 className="d-recap-block__title">Votes sur chaque dilemme</h4>
                   <p className="d-recap-block__hint">
@@ -227,32 +253,6 @@ export function HostPage() {
                       );
                     })}
                   </ul>
-                </div>
-                <div className="d-recap-block d-recap-block--scores">
-                  <h4 className="d-recap-block__title" id="host-recap-scores-heading">
-                    Points après cette manche
-                  </h4>
-                  <div className="d-recap-scores" role="region" aria-labelledby="host-recap-scores-heading">
-                    <div className="d-recap-scores-head" aria-hidden>
-                      <span>Joueur</span>
-                      <span>Manche</span>
-                      <span>Total</span>
-                    </div>
-                    <ul className="d-recap-scores-list">
-                      {hostRoundRecap.pointsThisRound.map((r) => {
-                        const deltaStr = r.delta > 0 ? `+${r.delta}` : String(r.delta);
-                        const deltaClass =
-                          r.delta > 0 ? "d-recap-score-delta--up" : r.delta < 0 ? "d-recap-score-delta--down" : "";
-                        return (
-                          <li key={r.playerId} className="d-recap-score-row">
-                            <span className="d-recap-score-name">{r.nickname}</span>
-                            <span className={`d-recap-score-delta ${deltaClass}`.trim()}>{deltaStr}</span>
-                            <span className="d-recap-score-total">{r.totalScore}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
                 </div>
                 {state.recapSkipProgress ? (
                   <p className="d-recap-host-skip">

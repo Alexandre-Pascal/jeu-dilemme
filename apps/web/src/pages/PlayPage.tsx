@@ -297,6 +297,41 @@ export function PlayPage() {
             <p>{recapPayload.offerText}</p>
           </div>
 
+          <div className="d-recap-block d-recap-block--scores">
+            <h3 className="d-recap-block__title" id="recap-scores-heading">
+              Points après cette manche
+            </h3>
+            <div className="d-recap-scores" role="region" aria-labelledby="recap-scores-heading">
+              <div className="d-recap-scores-head" aria-hidden>
+                <span>Joueur</span>
+                <span>Manche</span>
+                <span>Total</span>
+              </div>
+              <ul className="d-recap-scores-list">
+                {recapPayload.pointsThisRound.map((r) => {
+                  const self = r.playerId === state.playerId;
+                  const deltaStr = r.delta > 0 ? `+${r.delta}` : String(r.delta);
+                  const deltaClass =
+                    r.delta > 0 ? "d-recap-score-delta--up" : r.delta < 0 ? "d-recap-score-delta--down" : "";
+                  return (
+                    <li
+                      key={r.playerId}
+                      className={`d-recap-score-row${self ? " d-recap-score-row--self" : ""}`.trim()}
+                      aria-label={`${r.nickname}, ${deltaStr} cette manche, total ${r.totalScore}`}
+                    >
+                      <span className="d-recap-score-name">
+                        {r.nickname}
+                        {self ? <span className="d-recap-score-you">Toi</span> : null}
+                      </span>
+                      <span className={`d-recap-score-delta ${deltaClass}`.trim()}>{deltaStr}</span>
+                      <span className="d-recap-score-total">{r.totalScore}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+
           <div className="d-recap-block">
             <h3 className="d-recap-block__title">Votes sur chaque dilemme</h3>
             <p className="d-recap-block__hint">
@@ -339,41 +374,6 @@ export function PlayPage() {
                 );
               })}
             </ul>
-          </div>
-
-          <div className="d-recap-block d-recap-block--scores">
-            <h3 className="d-recap-block__title" id="recap-scores-heading">
-              Points après cette manche
-            </h3>
-            <div className="d-recap-scores" role="region" aria-labelledby="recap-scores-heading">
-              <div className="d-recap-scores-head" aria-hidden>
-                <span>Joueur</span>
-                <span>Manche</span>
-                <span>Total</span>
-              </div>
-              <ul className="d-recap-scores-list">
-                {recapPayload.pointsThisRound.map((r) => {
-                  const self = r.playerId === state.playerId;
-                  const deltaStr = r.delta > 0 ? `+${r.delta}` : String(r.delta);
-                  const deltaClass =
-                    r.delta > 0 ? "d-recap-score-delta--up" : r.delta < 0 ? "d-recap-score-delta--down" : "";
-                  return (
-                    <li
-                      key={r.playerId}
-                      className={`d-recap-score-row${self ? " d-recap-score-row--self" : ""}`.trim()}
-                      aria-label={`${r.nickname}, ${deltaStr} cette manche, total ${r.totalScore}`}
-                    >
-                      <span className="d-recap-score-name">
-                        {r.nickname}
-                        {self ? <span className="d-recap-score-you">Toi</span> : null}
-                      </span>
-                      <span className={`d-recap-score-delta ${deltaClass}`.trim()}>{deltaStr}</span>
-                      <span className="d-recap-score-total">{r.totalScore}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
           </div>
 
           {state.recapSkipProgress ? (
