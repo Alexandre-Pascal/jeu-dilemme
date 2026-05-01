@@ -5,6 +5,7 @@ import {
   SocketEvents,
   type ServerStatePayload,
 } from "@dilemme/shared";
+import { VoteResultBar } from "../components/VoteResultBar";
 import { getAckReason, isRoomJoinOk } from "../socket-ack";
 import { createSocket } from "../socket";
 
@@ -275,10 +276,8 @@ export function PlayPage() {
 
       {state?.phase === "round_subresult" && state.lastVoteResult ? (
         <section key="subresult" className="d-card d-phase-enter">
-          <h2>Résultat</h2>
-          <p>
-            {state.lastVoteResult.yesPct.toFixed(1)} % Oui — {state.lastVoteResult.noPct.toFixed(1)} % Non
-          </p>
+          <h2 className="d-subresult-title">Résultat du vote</h2>
+          <VoteResultBar result={state.lastVoteResult} />
           {state.lastRoundScores?.[0]?.masterclass ? <p className="d-masterclass">Masterclass !</p> : null}
         </section>
       ) : null}

@@ -524,6 +524,153 @@ button:disabled {
   color: #475569;
 }
 
+/* --- Résultat vote (barre horizontale) --- */
+.d-subresult-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 900;
+  margin: 0 0 1rem;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.d-vote-bar {
+  margin-top: 0.25rem;
+}
+
+.d-vote-bar__ruler {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+  padding: 0 0.1rem;
+}
+
+.d-vote-bar__track-shell {
+  position: relative;
+}
+
+.d-vote-bar__mid {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: rgba(15, 23, 42, 0.2);
+  border-radius: 1px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.d-vote-bar__track {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 2.35rem;
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 3px rgba(255, 255, 255, 0.35),
+    inset 0 -2px 8px rgba(15, 23, 42, 0.12);
+  border: 1px solid #e2e8f0;
+}
+
+.d-vote-bar__yes {
+  min-width: 0;
+  background: linear-gradient(180deg, #4ade80 0%, #22c55e 45%, #16a34a 100%);
+  box-shadow: 2px 0 8px rgba(22, 163, 74, 0.25);
+}
+
+.d-vote-bar__no {
+  min-width: 0;
+  background: linear-gradient(180deg, #fb7185 0%, #f43f5e 45%, #e11d48 100%);
+  box-shadow: -2px 0 8px rgba(225, 29, 72, 0.2);
+}
+
+.d-vote-bar__empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: linear-gradient(180deg, #f1f5f9, #e2e8f0);
+}
+
+.d-vote-bar__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-top: 0.85rem;
+  align-items: center;
+}
+
+.d-vote-bar__chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.d-vote-bar__chip strong {
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.d-vote-bar__chip--yes strong {
+  color: #15803d;
+}
+
+.d-vote-bar__chip--no strong {
+  color: #be123c;
+}
+
+.d-vote-bar__count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+}
+
+.d-vote-bar--compact .d-vote-bar__track {
+  height: 1.45rem;
+}
+
+.d-vote-bar--compact .d-vote-bar__ruler {
+  font-size: 0.58rem;
+  margin-bottom: 0.25rem;
+}
+
+.d-vote-bar--compact .d-vote-bar__legend {
+  margin-top: 0.55rem;
+  gap: 0.35rem 0.5rem;
+}
+
+.d-vote-bar--compact .d-vote-bar__chip {
+  font-size: 0.76rem;
+}
+
+.d-host-vote-result {
+  margin-top: 0.85rem;
+}
+
+.d-host-vote-result__label {
+  margin: 0 0 0.45rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
 /* --- Lists --- */
 .d-list {
   margin: 0;

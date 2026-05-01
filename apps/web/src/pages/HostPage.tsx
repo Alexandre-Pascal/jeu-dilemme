@@ -7,6 +7,7 @@ import {
   SocketEvents,
   type ServerStatePayload,
 } from "@dilemme/shared";
+import { VoteResultBar } from "../components/VoteResultBar";
 import { getAckReason, getHostCreateRoomCode } from "../socket-ack";
 import { createSocket } from "../socket";
 
@@ -219,10 +220,10 @@ export function HostPage() {
               </div>
             ) : null}
             {state.lastVoteResult ? (
-              <p>
-                Résultat vote : {state.lastVoteResult.yesPct.toFixed(1)} % Oui / {state.lastVoteResult.noPct.toFixed(1)} % Non
-                (abstentions : {state.lastVoteResult.abstainCount})
-              </p>
+              <div className="d-host-vote-result">
+                <p className="d-host-vote-result__label">Résultat du vote</p>
+                <VoteResultBar result={state.lastVoteResult} compact />
+              </div>
             ) : null}
             {hostRoundRecap ? (
               <div className="d-host-recap-inner d-recap d-recap--compact">
