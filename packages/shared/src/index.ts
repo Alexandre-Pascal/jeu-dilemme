@@ -8,6 +8,8 @@ export const SocketEvents = {
   HOST_START_GAME: "host:startGame",
   CONSTRAINT_SUBMIT: "constraint:submit",
   VOTE_CAST: "vote:cast",
+  /** Chaque joueur peut voter pour terminer le récap avant la fin du chrono. */
+  RECAP_SKIP_VOTE: "recap:skipVote",
   HOST_SET_TIMERS: "host:setTimers",
   SERVER_STATE: "server:state",
   ERROR: "error",
@@ -74,6 +76,14 @@ export const RoundRecapPayloadSchema = z.object({
 });
 export type RoundRecapPayload = z.infer<typeof RoundRecapPayloadSchema>;
 
+export const RecapSkipProgressSchema = z.object({
+  votedCount: z.number(),
+  requiredCount: z.number(),
+  /** Pour la connexion courante (joueur) ; false si MJ ou non connecté en tant que joueur. */
+  selfHasSkipped: z.boolean(),
+});
+export type RecapSkipProgress = z.infer<typeof RecapSkipProgressSchema>;
+
 export const ServerStatePayloadSchema = z.object({
   roomCode: z.string(),
   phase: GamePhaseSchema,
@@ -96,6 +106,8 @@ export const ServerStatePayloadSchema = z.object({
   lastRoundScores: z.array(RoundScoreRowSchema).nullable(),
   /** Présent uniquement en phase `round_recap`. */
   roundRecap: RoundRecapPayloadSchema.nullable(),
+  /** Présent en `round_recap` : votes pour passer le récap avant la fin du timer. */
+  recapSkipProgress: RecapSkipProgressSchema.nullable(),
   message: z.string().optional(),
 });
 export type ServerStatePayload = z.infer<typeof ServerStatePayloadSchema>;
@@ -121,6 +133,8 @@ export const HostSetTimersPayloadSchema = z.object({
   constraintSeconds: z.number().int().min(15).max(300),
   voteSeconds: z.number().int().min(15).max(300),
 });
+
+export const RecapSkipVotePayloadSchema = z.object({});
 
 export const MASTERCLASS_BONUS = 5;
 export const PODIUM_POINTS = [3, 2, 1] as const;

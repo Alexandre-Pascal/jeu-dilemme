@@ -6,6 +6,7 @@ import {
   HostCreatePayloadSchema,
   HostSetTimersPayloadSchema,
   PlayerReadyPayloadSchema,
+  RecapSkipVotePayloadSchema,
   RoomJoinPayloadSchema,
   SocketEvents,
   VoteCastPayloadSchema,
@@ -150,6 +151,16 @@ io.on("connection", (socket: GameSocket) => {
     const parsed = VoteCastPayloadSchema.safeParse(payload);
     if (!parsed.success) return;
     const res = room.castVote(socket.id, parsed.data.value, socket.data.playerId);
+    if (!res.ok) socket.emit(SocketEvents.ERROR, { message: res.reason });
+  });
+
+  socket.on(SocketEvents.RECAP_SKIP_VOTE, (payload: unknown) => {
+    const code = socket.data.roomCode as string | undefined;
+    if (!code) return;
+    const room = roomsByCode.get(code);
+    if (!room) return;
+    if (!RecapSkipVotePayloadSchema.safeParse(payload ?? {}).success) return;
+    const res = room.voteRecapSkip(socket.id, socket.data.playerId);
     if (!res.ok) socket.emit(SocketEvents.ERROR, { message: res.reason });
   });
 

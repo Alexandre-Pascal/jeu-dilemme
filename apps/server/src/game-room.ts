@@ -40,6 +40,8 @@ export class GameRoom {
   votes = new Map<string, "yes" | "no">();
   roundAuthorResults: AuthorRoundResult[] = [];
   roundRecapPayload: RoundRecapPayload | null = null;
+  /** Joueurs ayant demandé à passer le récap (phase `round_recap`). */
+  recapSkipVotes = new Set<string>();
   phaseEndsAt: number | null = null;
   private phaseTimer: ReturnType<typeof setTimeout> | null = null;
   private broadcast: () => void;
@@ -154,6 +156,14 @@ export class GameRoom {
       lastVoteResult,
       lastRoundScores,
       roundRecap: this.phase === "round_recap" && this.roundRecapPayload ? this.roundRecapPayload : null,
+      recapSkipProgress:
+        this.phase === "round_recap" && this.players.length > 0
+          ? {
+              votedCount: this.recapSkipVotes.size,
+              requiredCount: this.players.length,
+              selfHasSkipped: self ? this.recapSkipVotes.has(self.id) : false,
+            }
+          : null,
       message: undefined,
     };
   }
@@ -256,6 +266,20 @@ export class GameRoom {
       this.schedulePhaseEnd(remaining, () => this.endRoundRecap());
     }
     this.broadcast();
+    return { ok: true };
+  }
+
+  voteRecapSkip(
+    socketId: string,
+    clientPlayerId?: string | null,
+  ): { ok: true } | { ok: false; reason: string } {
+    if (this.phase !== "round_recap") return { ok: false, reason: "Pas de récap en cours" };
+    const p = this.resolvePlayer(socketId, clientPlayerId ?? null);
+    if (!p) return { ok: false, reason: "Joueur introuvable" };
+    if (!this.recapSkipVotes.has(p.id)) this.recapSkipVotes.add(p.id);
+    if (this.recapSkipVotes.size >= this.players.length) {
+      this.endRoundRecap();
+    } else this.broadcast();
     return { ok: true };
   }
 
@@ -386,6 +410,7 @@ export class GameRoom {
         authors: recapAuthors,
         pointsThisRound,
       };
+      this.recapSkipVotes.clear();
       this.phase = "round_recap";
       const recapMs = this.recapSeconds * 1000;
       this.phaseEndsAt = Date.now() + recapMs;
@@ -397,6 +422,7 @@ export class GameRoom {
   private endRoundRecap(): void {
     if (this.phase !== "round_recap") return;
     this.clearPhaseTimer();
+    this.recapSkipVotes.clear();
     this.roundRecapPayload = null;
     if (this.currentRoundIndex >= this.offers.length) {
       this.phase = "game_end";

@@ -97,6 +97,10 @@ export function PlayPage() {
     });
   }, [socket]);
 
+  const voteSkipRecap = useCallback(() => {
+    socket.emit(SocketEvents.RECAP_SKIP_VOTE, {});
+  }, [socket]);
+
   const endsIn = useCountdown(state?.phaseEndsAt ?? null);
 
   if (!joined) {
@@ -312,9 +316,40 @@ export function PlayPage() {
             </table>
           </div>
 
+          {state.recapSkipProgress ? (
+            <div
+              style={{
+                marginTop: "1.1rem",
+                padding: "1rem",
+                borderRadius: 12,
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              <p style={{ margin: 0, fontSize: "0.95rem", color: "#475569" }}>
+                Pour passer avant la fin du chrono :{" "}
+                <strong>
+                  {state.recapSkipProgress.votedCount} / {state.recapSkipProgress.requiredCount}
+                </strong>{" "}
+                joueurs ont voté.
+              </p>
+              {state.playerId ? (
+                state.recapSkipProgress.selfHasSkipped ? (
+                  <p style={{ margin: "0.65rem 0 0", fontSize: "0.9rem", color: "#16a34a", fontWeight: 600 }}>
+                    Tu as voté pour passer — en attente des autres…
+                  </p>
+                ) : (
+                  <button type="button" onClick={voteSkipRecap} style={btnSkipRecap}>
+                    Passer le récap
+                  </button>
+                )
+              ) : null}
+            </div>
+          ) : null}
+
           {endsIn !== null ? (
             <p style={{ marginTop: "1rem", padding: "0.85rem", borderRadius: 12, background: "#f4f4f5", color: "#3f3f46", textAlign: "center" }}>
-              Suite dans <strong>{endsIn}s</strong>
+              Suite automatiquement dans <strong>{endsIn}s</strong> si personne ne valide avant.
             </p>
           ) : null}
         </section>
@@ -443,4 +478,16 @@ const recapTd: CSSProperties = {
   padding: "0.65rem 0.85rem",
   borderBottom: "1px solid #f4f4f5",
   color: "#27272a",
+};
+
+const btnSkipRecap: CSSProperties = {
+  marginTop: "0.75rem",
+  padding: "0.65rem 1.1rem",
+  borderRadius: 12,
+  border: "1px solid #64748b",
+  background: "#fff",
+  color: "#334155",
+  fontWeight: 700,
+  fontSize: "0.95rem",
+  cursor: "pointer",
 };

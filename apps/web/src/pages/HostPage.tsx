@@ -212,6 +212,15 @@ export function HostPage() {
                     ))}
                   </tbody>
                 </table>
+                {state.recapSkipProgress ? (
+                  <p style={{ marginTop: "0.65rem", marginBottom: 0, fontSize: "0.85rem", color: "#64748b" }}>
+                    Votes pour passer le récap :{" "}
+                    <strong>
+                      {state.recapSkipProgress.votedCount} / {state.recapSkipProgress.requiredCount}
+                    </strong>{" "}
+                    joueurs
+                  </p>
+                ) : null}
               </div>
             ) : null}
             {state.phase === "game_end" ? <p style={{ fontSize: "1.25rem" }}>Partie terminée.</p> : null}
