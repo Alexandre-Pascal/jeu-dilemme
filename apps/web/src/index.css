@@ -1025,42 +1025,78 @@ button:disabled {
   border-top: 1px solid #e2e8f0;
 }
 
-/* --- Home role cards --- */
+/* --- Accueil : choix du rôle --- */
 .d-home-hero {
   text-align: center;
-  padding: 2rem 0 1rem;
+  padding: clamp(1.25rem, 4vw, 2rem) 0 1.25rem;
 }
 
 .d-home-badge {
   display: inline-block;
   padding: 0.35rem 0.85rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.12);
   color: rgba(255, 255, 255, 0.95);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-bottom: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
 }
 
 .d-home-title {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 7vw, 2.75rem);
+  font-size: clamp(2rem, 7vw, 2.85rem);
   font-weight: 900;
   letter-spacing: -0.04em;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.65rem;
   color: #fff;
-  line-height: 1.1;
+  line-height: 1.08;
   text-shadow: 0 4px 40px rgba(124, 58, 237, 0.5);
 }
 
 .d-home-lead {
-  margin: 0 auto 2rem;
-  max-width: 26rem;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1.05rem;
+  margin: 0 auto;
+  max-width: 28rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(0.95rem, 2.8vw, 1.05rem);
+  line-height: 1.5;
+}
+
+.d-home-roles {
+  margin-top: 1.75rem;
+  padding: 1.35rem 1.1rem 1.5rem;
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(14px);
+}
+
+.d-home-roles-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 4vw, 1.45rem);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-align: center;
+  margin: 0 0 0.65rem;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.d-home-roles-lead {
+  margin: 0 auto 1.35rem;
+  max-width: 32rem;
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.d-home-roles-lead strong {
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 800;
 }
 
 .d-home-grid {
@@ -1069,66 +1105,161 @@ button:disabled {
   gap: 1rem;
 }
 
-@media (min-width: 560px) {
+@media (min-width: 640px) {
   .d-home-grid {
     grid-template-columns: 1fr 1fr;
+    gap: 1.1rem;
   }
 }
 
 .d-home-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 1.35rem 1.5rem;
-  border-radius: var(--radius-xl);
+  padding: 1.35rem 1.35rem 1.4rem;
+  border-radius: var(--radius-lg);
   background: var(--surface);
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.65);
   box-shadow: var(--shadow-card);
   text-decoration: none;
-  color: inherit;
+  color: var(--text);
+  font-weight: 400;
+  overflow: hidden;
   transition:
     transform var(--transition-med),
-    box-shadow var(--transition-med);
+    box-shadow var(--transition-med),
+    border-color var(--transition-fast);
   animation: d-fade-up 0.5s ease-out both;
+}
+
+.d-home-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+
+.d-home-card--host::before {
+  background: linear-gradient(180deg, #a78bfa, var(--primary));
+}
+
+.d-home-card--player::before {
+  background: linear-gradient(180deg, #fda4af, var(--accent));
 }
 
 .d-home-card:nth-child(2) {
   animation-delay: 0.08s;
 }
 
+.d-home-card:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.95);
+  outline-offset: 3px;
+}
+
 @media (hover: hover) {
   .d-home-card:hover {
-    transform: translateY(-4px) scale(1.01);
+    color: var(--text);
+    transform: translateY(-3px);
     box-shadow: var(--shadow-card-hover);
+    border-color: rgba(255, 255, 255, 0.9);
+  }
+
+  .d-home-card--host:hover {
+    border-color: rgba(124, 58, 237, 0.35);
+  }
+
+  .d-home-card--player:hover {
+    border-color: rgba(251, 113, 133, 0.45);
   }
 }
 
 .d-home-card-icon {
-  font-size: 2rem;
+  font-size: 1.85rem;
   line-height: 1;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.d-home-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+  margin-bottom: 0.45rem;
 }
 
 .d-home-card-title {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.22rem;
   font-weight: 900;
-  margin: 0 0 0.35rem;
+  margin: 0;
   color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.d-home-card-platform {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  line-height: 1;
+}
+
+.d-home-card--host .d-home-card-platform {
+  color: #5b21b6;
+  background: linear-gradient(180deg, #ede9fe, #ddd6fe);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+}
+
+.d-home-card--player .d-home-card-platform {
+  color: #9f1239;
+  background: linear-gradient(180deg, #ffe4e6, #fecdd3);
+  border: 1px solid rgba(251, 113, 133, 0.35);
 }
 
 .d-home-card-desc {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--text-muted);
-  line-height: 1.4;
+  line-height: 1.45;
+  flex: 1;
 }
 
 .d-home-card-cta {
-  margin-top: 1rem;
+  margin-top: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-weight: 800;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+.d-home-card--host .d-home-card-cta {
   color: var(--primary);
+}
+
+.d-home-card--player .d-home-card-cta {
+  color: #db2777;
+}
+
+.d-home-card-cta::after {
+  content: "→";
+  font-weight: 900;
+  transition: transform var(--transition-fast);
+}
+
+@media (hover: hover) {
+  .d-home-card:hover .d-home-card-cta::after {
+    transform: translateX(3px);
+  }
 }
 
 .d-offer-line {

@@ -15,31 +15,53 @@ export function App() {
 function Home() {
   return (
     <main className="d-page d-page--wide">
-      <div className="d-home-hero">
+      <header className="d-home-hero">
         <span className="d-home-badge">Jeu en ligne</span>
         <h1 className="d-home-title">Le Dilemme Parfait</h1>
-        <p className="d-home-lead">Équilibre les offres improbables, vote, marque des points. Choisis comment tu joues.</p>
-      </div>
+        <p className="d-home-lead">
+          Offres absurdes, contraintes cinglantes, votes collectifs : une manche = une offre, des dilemmes, des points.
+        </p>
+      </header>
 
-      <div className="d-home-grid">
-        <Link to="/host" className="d-home-card">
-          <span className="d-home-card-icon" aria-hidden>
-            🎬
-          </span>
-          <h2 className="d-home-card-title">Maître du jeu</h2>
-          <p className="d-home-card-desc">Crée la salle, lance la partie et suis les scores depuis un grand écran.</p>
-          <span className="d-home-card-cta">Ouvrir l’espace MJ →</span>
-        </Link>
+      <section className="d-home-roles" aria-labelledby="home-roles-title">
+        <h2 id="home-roles-title" className="d-home-roles-title">
+          Choisis ton rôle
+        </h2>
+        <p className="d-home-roles-lead">
+          Une partie : <strong>un écran « maître du jeu »</strong> (idéalement au clavier) et{" "}
+          <strong>un téléphone par joueur</strong> pour écrire et voter.
+        </p>
 
-        <Link to="/play" className="d-home-card">
-          <span className="d-home-card-icon" aria-hidden>
-            🎮
-          </span>
-          <h2 className="d-home-card-title">Joueur</h2>
-          <p className="d-home-card-desc">Rejoins avec le code salle, écris tes « mais… » et vote sur les dilemmes.</p>
-          <span className="d-home-card-cta">Rejoindre une partie →</span>
-        </Link>
-      </div>
+        <div className="d-home-grid">
+          <Link to="/host" className="d-home-card d-home-card--host">
+            <span className="d-home-card-icon" aria-hidden>
+              🎬
+            </span>
+            <div className="d-home-card-head">
+              <h3 className="d-home-card-title">Maître du jeu</h3>
+              <span className="d-home-card-platform">PC</span>
+            </div>
+            <p className="d-home-card-desc">
+              Crée la salle, partage le code, lance les manches et affiche l’état de la partie sur un grand écran.
+            </p>
+            <span className="d-home-card-cta">Ouvrir l’espace MJ</span>
+          </Link>
+
+          <Link to="/play" className="d-home-card d-home-card--player">
+            <span className="d-home-card-icon" aria-hidden>
+              🎮
+            </span>
+            <div className="d-home-card-head">
+              <h3 className="d-home-card-title">Joueur</h3>
+              <span className="d-home-card-platform">Mobile</span>
+            </div>
+            <p className="d-home-card-desc">
+              Rejoins avec le code salle, propose tes « mais… » sur l’offre et vote oui / non sur chaque dilemme.
+            </p>
+            <span className="d-home-card-cta">Rejoindre une partie</span>
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }
