@@ -42,15 +42,15 @@ export function RulesBriefingPanel({ isHost, onDismiss }: Props) {
           <div className="d-rules-podium">
             <div className="d-rules-podium__cell">
               <span className="d-rules-podium__rk">1er</span>
-              <span className="d-rules-podium__pt">3 points</span>
+              <span className="d-rules-podium__pt">3 pts</span>
             </div>
             <div className="d-rules-podium__cell">
               <span className="d-rules-podium__rk">2e</span>
-              <span className="d-rules-podium__pt">2 points</span>
+              <span className="d-rules-podium__pt">2 pts</span>
             </div>
             <div className="d-rules-podium__cell">
               <span className="d-rules-podium__rk">3e</span>
-              <span className="d-rules-podium__pt">1 point</span>
+              <span className="d-rules-podium__pt">1 pt</span>
             </div>
           </div>
           <p className="d-rules-tile-p">
