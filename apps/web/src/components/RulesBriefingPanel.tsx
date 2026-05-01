@@ -1,25 +1,12 @@
 type Props = {
   isHost: boolean;
-  /** MJ uniquement : ferme les règles et démarre le chrono des contraintes. */
   onDismiss?: () => void;
 };
 
-const STEPS: { title: string; body: string; accent: "violet" | "rose" | "amber" }[] = [
-  {
-    title: "Contraintes",
-    body: "À chaque manche, une offre apparaît. Sur ton téléphone, tu complètes avec un « mais… » pour rendre le deal moins alléchant — le chrono part quand le MJ a fermé cet écran.",
-    accent: "violet",
-  },
-  {
-    title: "Votes Oui / Non",
-    body: "Chaque dilemme (offre + contrainte d’un joueur) est voté à la suite. Tu votes pour les autres ; sur le tien, tu ne votes pas : le groupe décide. Les abstentions ne comptent pas dans le pourcentage : seuls les Oui et Non exprimés forment le résultat.",
-    accent: "rose",
-  },
-  {
-    title: "Récap & manches suivantes",
-    body: "Après chaque vote, le résultat s’affiche. En fin de manche, le récap applique le barème ci-dessus, puis on enchaîne sur l’offre suivante jusqu’à la fin de la partie.",
-    accent: "amber",
-  },
+const FLOW = [
+  "Offre affichée → chacun écrit son « mais… » (chrono).",
+  "Chaque dilemme est voté Oui ou Non à la suite — pas sur le tien.",
+  "Récap des scores, puis manche suivante.",
 ];
 
 export function RulesBriefingPanel({ isHost, onDismiss }: Props) {
@@ -27,51 +14,66 @@ export function RulesBriefingPanel({ isHost, onDismiss }: Props) {
     <div className="d-rules">
       <div className="d-rules-aurora" aria-hidden />
       <header className="d-rules-header">
-        <span className="d-rules-kicker">Tout le monde sur la même longueur d’onde</span>
-        <h2 className="d-rules-title">Les règles en 3 temps</h2>
+        <h2 className="d-rules-title">Règles</h2>
         <p className="d-rules-lead">
-          Pas de chrono ici : lis à ton rythme.{" "}
-          {isHost ? "Quand tu es prêt, tu lances la première manche." : "Le MJ déclenche la suite quand il veut."}
+          {isHost ? "Tu lances la 1re manche quand tu veux." : "Le MJ ouvre la suite quand c’est bon."}
         </p>
       </header>
 
-      <div className="d-rules-callout" role="note">
-        <p className="d-rules-callout__block">
-          <strong>Objectif pour ton dilemme.</strong> Quand c’est ton « offre + mais… » qui est votée, tu veux que le groupe soit{" "}
-          <strong>le plus partagé possible entre Oui et Non</strong>, c’est-à-dire se rapprocher du{" "}
-          <strong>50&nbsp;% Oui / 50&nbsp;% Non</strong> (sur les votes Oui+Non uniquement). Un vote à 90&nbsp;% Oui ou 90&nbsp;% Non
-          est « très à fond » : pour toi, c’est moins bien qu’un vote serré autour du milieu.
-        </p>
-        <p className="d-rules-callout__block">
-          <strong>Points en fin de manche.</strong> Tous les dilemmes de la manche sont classés du plus proche du 50/50 au plus
-          éloigné. <strong>1er → 3 pts, 2e → 2 pts, 3e → 1 pt</strong>, les autres 0. À égalité d’écart au 50/50, même rang donc{" "}
-          <strong>mêmes points</strong> (ex.&nbsp;: deux ex-aequo 1ers → chacun 3 pts). Bonus <strong>Masterclass</strong> : si
-          tu as exactement autant de Oui que de Non (avec au moins un vote), <strong>+5 pts</strong> en plus sur ce dilemme.
-        </p>
+      <div className="d-rules-bento">
+        <section className="d-rules-tile d-rules-tile--goal" aria-labelledby="rules-goal-h">
+          <h3 id="rules-goal-h" className="d-rules-tile-h">
+            Objectif
+          </h3>
+          <div className="d-rules-gauge" aria-hidden>
+            <span className="d-rules-gauge__yes">Oui</span>
+            <span className="d-rules-gauge__no">Non</span>
+          </div>
+          <p className="d-rules-tile-p">
+            Sur <strong>ton</strong> dilemme, tu veux un vote <strong>50&nbsp;/&nbsp;50</strong> entre Oui et Non (abstentions
+            ignorées). Vote à fond = moins bien classé.
+          </p>
+        </section>
+
+        <section className="d-rules-tile d-rules-tile--pts" aria-labelledby="rules-pts-h">
+          <h3 id="rules-pts-h" className="d-rules-tile-h">
+            Points
+          </h3>
+          <div className="d-rules-podium">
+            <div className="d-rules-podium__cell">
+              <span className="d-rules-podium__rk">1</span>
+              <span className="d-rules-podium__pt">3</span>
+            </div>
+            <div className="d-rules-podium__cell">
+              <span className="d-rules-podium__rk">2</span>
+              <span className="d-rules-podium__pt">2</span>
+            </div>
+            <div className="d-rules-podium__cell">
+              <span className="d-rules-podium__rk">3</span>
+              <span className="d-rules-podium__pt">1</span>
+            </div>
+          </div>
+          <p className="d-rules-tile-p">
+            Fin de manche : du plus proche au plus loin du 50/50. Égalité → même rang.{" "}
+            <span className="d-rules-badge">+5</span> si Oui = Non exact.
+          </p>
+        </section>
       </div>
 
-      <ol className="d-rules-steps" aria-label="Déroulé d’une partie">
-        {STEPS.map((s, i) => (
-          <li key={s.title} className={`d-rules-step d-rules-step--${s.accent}`} style={{ animationDelay: `${0.08 + i * 0.14}s` }}>
-            <span className="d-rules-step__num" aria-hidden>
+      <ol className="d-rules-flow" aria-label="Déroulé">
+        {FLOW.map((line, i) => (
+          <li key={line} className="d-rules-flow__li" style={{ animationDelay: `${0.14 + i * 0.06}s` }}>
+            <span className="d-rules-flow__i" aria-hidden>
               {i + 1}
             </span>
-            <div className="d-rules-step__body">
-              <h3 className="d-rules-step__title">{s.title}</h3>
-              <p className="d-rules-step__text">{s.body}</p>
-            </div>
+            {line}
           </li>
         ))}
       </ol>
 
       {isHost ? (
         <footer className="d-rules-footer d-rules-footer--host">
-          <p className="d-rules-footer-note">Les joueurs voient la même chose sur leur téléphone.</p>
-          <button
-            type="button"
-            className="d-btn d-btn--primary d-btn--lg d-btn--block d-rules-cta"
-            onClick={onDismiss}
-          >
+          <button type="button" className="d-btn d-btn--primary d-btn--lg d-btn--block d-rules-cta" onClick={onDismiss}>
             Commencer la 1re manche
           </button>
         </footer>
@@ -79,7 +81,7 @@ export function RulesBriefingPanel({ isHost, onDismiss }: Props) {
         <footer className="d-rules-footer">
           <p className="d-rules-wait">
             <span className="d-rules-wait__dot" aria-hidden />
-            En attente du maître du jeu…
+            En attente du MJ…
           </p>
         </footer>
       )}
