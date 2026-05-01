@@ -14,7 +14,7 @@ import {
 } from "@dilemme/shared";
 import { createRequire } from "node:module";
 import { GameRoom } from "./game-room.js";
-import { loadOfferTexts, prisma } from "./prisma.js";
+import { loadOffersByIds, loadOfferTexts, prisma } from "./prisma.js";
 
 type GameSocket = {
   id: string;
@@ -48,6 +48,41 @@ await fastify.register(cors, { origin: CORS_ORIGIN, credentials: true });
 
 fastify.get("/health", async () => ({ ok: true }));
 
+/** Liste toutes les offres disponibles. */
+fastify.get("/api/offers", async () => {
+  const rows = await prisma.offer.findMany({ orderBy: { order: "asc" } });
+  return rows;
+});
+
+/** Ajoute une nouvelle offre. */
+fastify.post<{ Body: { text: string } }>("/api/offers", {
+  schema: { body: { type: "object", required: ["text"], properties: { text: { type: "string", minLength: 1, maxLength: 500 } } } },
+}, async (req, reply) => {
+  const { text } = req.body;
+  const max = await prisma.offer.aggregate({ _max: { order: true } });
+  const nextOrder = (max._max.order ?? 0) + 1;
+  const offer = await prisma.offer.create({ data: { text: text.trim(), order: nextOrder } });
+  reply.code(201);
+  return offer;
+});
+
+/** Supprime une offre par son ID. */
+fastify.delete<{ Params: { id: string } }>("/api/offers/:id", async (req, reply) => {
+  const id = Number.parseInt(req.params.id, 10);
+  if (!Number.isFinite(id)) {
+    reply.code(400);
+    return { ok: false, reason: "ID invalide" };
+  }
+  try {
+    await prisma.offer.delete({ where: { id } });
+    reply.code(204);
+    return null;
+  } catch {
+    reply.code(404);
+    return { ok: false, reason: "Offre introuvable" };
+  }
+});
+
 await fastify.ready();
 
 const io = new IOServer(fastify.server, {
@@ -77,8 +112,9 @@ io.on("connection", (socket: GameSocket) => {
       return;
     }
     let room: GameRoom;
-    const planned = parsed.data.roundCount ?? null;
-    room = GameRoom.create(socket.id, () => broadcastRoom(room), planned);
+    const offerIds = parsed.data.offerIds && parsed.data.offerIds.length > 0 ? parsed.data.offerIds : null;
+    const planned = offerIds ? null : (parsed.data.roundCount ?? null);
+    room = GameRoom.create(socket.id, () => broadcastRoom(room), planned, offerIds);
     roomsByCode.set(room.roomCode, room);
     socket.join(room.roomCode);
     socket.data.roomCode = room.roomCode;
@@ -129,7 +165,10 @@ io.on("connection", (socket: GameSocket) => {
     if (!code) return;
     const room = roomsByCode.get(code);
     if (!room || socket.id !== room.hostSocketId) return;
-    const res = await room.startGame(loadOfferTexts);
+    const loader = room.selectedOfferIds
+      ? () => loadOffersByIds(room.selectedOfferIds!)
+      : loadOfferTexts;
+    const res = await room.startGame(loader);
     if (!res.ok) socket.emit(SocketEvents.ERROR, { message: res.reason });
     broadcastRoom(room);
   });

@@ -1,5 +1,6 @@
 import { Link, Route, Routes } from "react-router-dom";
 import { HostPage } from "./pages/HostPage";
+import { OffersPage } from "./pages/OffersPage";
 import { PlayPage } from "./pages/PlayPage";
 
 export function App() {
@@ -7,6 +8,7 @@ export function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/host" element={<HostPage />} />
+      <Route path="/host/offers" element={<OffersPage />} />
       <Route path="/play" element={<PlayPage />} />
     </Routes>
   );

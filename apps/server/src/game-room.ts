@@ -35,6 +35,8 @@ export class GameRoom {
   offers: string[] = [];
   /** Limite MJ à la création de salle ; `null` = charger toutes les offres au démarrage. */
   plannedRoundCount: number | null = null;
+  /** IDs d'offres spécifiques choisis par le MJ ; `null` = pas de sélection personnalisée. */
+  selectedOfferIds: number[] | null = null;
   currentRoundIndex = 0;
   constraints = new Map<string, string>();
   /** Index dans `players` : pour quel auteur on vote */
@@ -54,9 +56,15 @@ export class GameRoom {
     this.broadcast = broadcast;
   }
 
-  static create(hostSocketId: string, broadcast: () => void, plannedRoundCount: number | null = null): GameRoom {
+  static create(
+    hostSocketId: string,
+    broadcast: () => void,
+    plannedRoundCount: number | null = null,
+    selectedOfferIds: number[] | null = null,
+  ): GameRoom {
     const room = new GameRoom(makeRoomCode(), hostSocketId, broadcast);
-    room.plannedRoundCount = plannedRoundCount;
+    room.plannedRoundCount = selectedOfferIds ? selectedOfferIds.length : plannedRoundCount;
+    room.selectedOfferIds = selectedOfferIds;
     return room;
   }
 

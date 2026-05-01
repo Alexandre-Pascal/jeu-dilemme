@@ -130,6 +130,8 @@ export const HostCreatePayloadSchema = z.object({
   nickname: z.string().min(1).max(32).optional(),
   /** Si absent : toutes les offres disponibles en base au lancement. Sinon, au plus ce nombre d’offres (manches). */
   roundCount: z.number().int().min(HOST_ROUND_COUNT_MIN).max(HOST_ROUND_COUNT_MAX).optional(),
+  /** Si fourni : utilise uniquement ces IDs d’offres (dans l’ordre). Prend la priorité sur roundCount. */
+  offerIds: z.array(z.number().int().positive()).optional(),
 });
 export const RoomJoinPayloadSchema = z.object({
   roomCode: z.string().min(4).max(8),

@@ -415,6 +415,9 @@ export function PlayPage() {
         <section key="end" className="d-card d-phase-enter">
           <h2>Fin de partie</h2>
           <p className="d-podium-intro">Classement final — du plus haut score au plus bas.</p>
+          <a href="/" className="d-btn d-btn--secondary d-btn--block" style={{ marginBottom: "1rem", textAlign: "center" }}>
+            Nouvelle partie
+          </a>
           <div className="d-podium-head" aria-hidden>
             <span>Rang</span>
             <span>Joueur</span>

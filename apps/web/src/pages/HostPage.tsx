@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   HOST_ROUND_COUNT_MAX,
   HOST_ROUND_COUNT_MIN,
@@ -9,6 +10,7 @@ import {
 } from "@dilemme/shared";
 import { RulesBriefingPanel } from "../components/RulesBriefingPanel";
 import { VoteResultBar } from "../components/VoteResultBar";
+import { loadSelectedOfferIds } from "./OffersPage";
 import { getAckReason, getHostCreateRoomCode } from "../socket-ack";
 import { createSocket } from "../socket";
 
@@ -60,7 +62,15 @@ export function HostPage() {
   const createRoom = useCallback(() => {
     setError(null);
     if (!socket.connected) socket.connect();
-    const payload = createUseAllOffers ? {} : { roundCount: createRoundCount };
+    const savedOfferIds = loadSelectedOfferIds();
+    let payload: Record<string, unknown>;
+    if (savedOfferIds && savedOfferIds.length > 0) {
+      payload = { offerIds: savedOfferIds };
+    } else if (createUseAllOffers) {
+      payload = {};
+    } else {
+      payload = { roundCount: createRoundCount };
+    }
     socket.emit(SocketEvents.HOST_CREATE, payload, (ack: unknown) => {
       const code = getHostCreateRoomCode(ack);
       if (code) setRoomCode(code);
@@ -127,38 +137,14 @@ export function HostPage() {
             Une manche = une offre tirée de la base ; chaque joueur écrit une contrainte, puis tout le monde vote sur
             chaque dilemme.
           </p>
-          <div className="d-host-create-field">
-            <label className="d-checkbox-label">
-              <input
-                type="checkbox"
-                checked={createUseAllOffers}
-                onChange={(e) => setCreateUseAllOffers(e.target.checked)}
-              />
-              <span>Jouer toutes les offres disponibles en base</span>
-            </label>
-          </div>
-          {!createUseAllOffers ? (
-            <label className="d-label-row d-host-create-field">
-              Nombre de manches (offres)
-              <input
-                type="number"
-                min={HOST_ROUND_COUNT_MIN}
-                max={HOST_ROUND_COUNT_MAX}
-                value={createRoundCount}
-                onChange={(e) => {
-                  const n = Number.parseInt(e.target.value, 10);
-                  if (!Number.isFinite(n)) return;
-                  setCreateRoundCount(Math.min(HOST_ROUND_COUNT_MAX, Math.max(HOST_ROUND_COUNT_MIN, n)));
-                }}
-                className="d-input d-input--narrow"
-              />
-            </label>
-          ) : null}
-          <p className="d-muted d-host-create-hint">
-            {createUseAllOffers
-              ? `Au lancement, la partie utilisera jusqu’à toutes les offres (dans l’ordre).`
-              : `La partie s’arrêtera après ${createRoundCount} manche${createRoundCount > 1 ? "s" : ""} (ou moins s’il y a moins d’offres en base).`}
-          </p>
+
+          <OfferSelectionSummary
+            createUseAllOffers={createUseAllOffers}
+            setCreateUseAllOffers={setCreateUseAllOffers}
+            createRoundCount={createRoundCount}
+            setCreateRoundCount={setCreateRoundCount}
+          />
+
           <button type="button" onClick={createRoom} className="d-btn d-btn--primary d-btn--lg d-btn--block">
             Créer la salle
           </button>
@@ -354,6 +340,85 @@ export function HostPage() {
         <p className="d-connecting">Connecté au serveur…</p>
       )}
     </main>
+  );
+}
+
+type OfferSelectionSummaryProps = {
+  createUseAllOffers: boolean;
+  setCreateUseAllOffers: (v: boolean) => void;
+  createRoundCount: number;
+  setCreateRoundCount: (n: number) => void;
+};
+
+function OfferSelectionSummary({
+  createUseAllOffers,
+  setCreateUseAllOffers,
+  createRoundCount,
+  setCreateRoundCount,
+}: OfferSelectionSummaryProps) {
+  const [savedIds, setSavedIds] = useState<number[] | null>(() => loadSelectedOfferIds());
+
+  const clearSelection = () => {
+    localStorage.removeItem("dilemme:selectedOfferIds");
+    setSavedIds(null);
+  };
+
+  if (savedIds && savedIds.length > 0) {
+    return (
+      <div className="d-host-create-field">
+        <p className="d-muted" style={{ marginBottom: "0.4rem" }}>
+          <strong>{savedIds.length} offre{savedIds.length > 1 ? "s" : ""} sélectionnée{savedIds.length > 1 ? "s" : ""}</strong> (depuis la gestion des dilemmes).
+        </p>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <Link to="/host/offers" className="d-btn d-btn--secondary d-btn--sm">
+            Modifier la sélection
+          </Link>
+          <button type="button" className="d-btn d-btn--ghost d-btn--sm" onClick={clearSelection}>
+            Utiliser toutes les offres
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="d-host-create-field">
+        <label className="d-checkbox-label">
+          <input
+            type="checkbox"
+            checked={createUseAllOffers}
+            onChange={(e) => setCreateUseAllOffers(e.target.checked)}
+          />
+          <span>Jouer toutes les offres disponibles en base</span>
+        </label>
+      </div>
+      {!createUseAllOffers ? (
+        <label className="d-label-row d-host-create-field">
+          Nombre de manches (offres)
+          <input
+            type="number"
+            min={HOST_ROUND_COUNT_MIN}
+            max={HOST_ROUND_COUNT_MAX}
+            value={createRoundCount}
+            onChange={(e) => {
+              const n = Number.parseInt(e.target.value, 10);
+              if (!Number.isFinite(n)) return;
+              setCreateRoundCount(Math.min(HOST_ROUND_COUNT_MAX, Math.max(HOST_ROUND_COUNT_MIN, n)));
+            }}
+            className="d-input d-input--narrow"
+          />
+        </label>
+      ) : null}
+      <p className="d-muted d-host-create-hint">
+        {createUseAllOffers
+          ? `Au lancement, la partie utilisera toutes les offres en base.`
+          : `La partie s'arrêtera après ${createRoundCount} manche${createRoundCount > 1 ? "s" : ""}.`}
+      </p>
+      <Link to="/host/offers" className="d-btn d-btn--ghost d-btn--sm d-host-create-field" style={{ display: "inline-flex" }}>
+        Gérer / choisir les dilemmes →
+      </Link>
+    </>
   );
 }
 
