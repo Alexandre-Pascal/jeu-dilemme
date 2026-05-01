@@ -372,15 +372,41 @@ export function PlayPage() {
       {state?.phase === "game_end" ? (
         <section key="end" className="d-card d-phase-enter">
           <h2>Fin de partie</h2>
-          <ol className="d-leaderboard">
+          <p className="d-podium-intro">Classement final — du plus haut score au plus bas.</p>
+          <div className="d-podium-head" aria-hidden>
+            <span>Rang</span>
+            <span>Joueur</span>
+            <span>Points</span>
+          </div>
+          <ul className="d-podium">
             {[...state.players]
               .sort((a, b) => b.score - a.score)
-              .map((p) => (
-                <li key={p.id}>
-                  {p.nickname} — {p.score} pts
-                </li>
-              ))}
-          </ol>
+              .map((p, i) => {
+                const rank = i + 1;
+                const tier =
+                  rank === 1 ? "d-podium__row--1" : rank === 2 ? "d-podium__row--2" : rank === 3 ? "d-podium__row--3" : "";
+                const self = p.id === state.playerId ? "d-podium__row--self" : "";
+                return (
+                  <li
+                    key={p.id}
+                    className={`d-podium__row ${tier} ${self}`.trim()}
+                    aria-label={`Rang ${rank}, ${p.nickname}, ${p.score} points`}
+                  >
+                    <span className="d-podium__rank" aria-hidden>
+                      {rank}
+                    </span>
+                    <span className="d-podium__name">
+                      {p.nickname}
+                      {p.id === state.playerId ? <span className="d-podium__you">Toi</span> : null}
+                    </span>
+                    <span className="d-podium__score">
+                      {p.score}
+                      <span className="d-podium__pts">pts</span>
+                    </span>
+                  </li>
+                );
+              })}
+          </ul>
         </section>
       ) : null}
 
