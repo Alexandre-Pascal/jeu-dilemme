@@ -181,10 +181,6 @@ export function HostPage() {
                   </span>
                   <h3 className="d-recap-title">Récap</h3>
                 </header>
-                <div className="d-recap-offer">
-                  <span className="d-kicker">L&apos;offre</span>
-                  <p>{hostRoundRecap.offerText}</p>
-                </div>
                 <div className="d-recap-block d-recap-block--scores">
                   <h4 className="d-recap-block__title" id="host-recap-scores-heading">
                     Points après cette manche
@@ -210,6 +206,10 @@ export function HostPage() {
                       })}
                     </ul>
                   </div>
+                </div>
+                <div className="d-recap-offer d-recap-offer--remind">
+                  <span className="d-kicker">Rappel — l&apos;offre</span>
+                  <p>{hostRoundRecap.offerText}</p>
                 </div>
                 <div className="d-recap-block">
                   <h4 className="d-recap-block__title">Votes sur chaque dilemme</h4>

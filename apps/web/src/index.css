@@ -736,6 +736,10 @@ button:disabled {
   color: var(--text);
 }
 
+.d-recap-block--scores + .d-recap-offer--remind {
+  margin-top: 1.15rem;
+}
+
 .d-recap-block {
   margin-top: 1.35rem;
 }

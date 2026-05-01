@@ -292,11 +292,6 @@ export function PlayPage() {
             <h2 className="d-recap-title">Récap</h2>
           </header>
 
-          <div className="d-recap-offer">
-            <span className="d-kicker">L&apos;offre</span>
-            <p>{recapPayload.offerText}</p>
-          </div>
-
           <div className="d-recap-block d-recap-block--scores">
             <h3 className="d-recap-block__title" id="recap-scores-heading">
               Points après cette manche
@@ -330,6 +325,11 @@ export function PlayPage() {
                 })}
               </ul>
             </div>
+          </div>
+
+          <div className="d-recap-offer d-recap-offer--remind">
+            <span className="d-kicker">Rappel — l&apos;offre</span>
+            <p>{recapPayload.offerText}</p>
           </div>
 
           <div className="d-recap-block">
