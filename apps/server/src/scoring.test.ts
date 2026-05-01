@@ -43,4 +43,17 @@ describe("computeRoundPodiumDeltas", () => {
     expect(m.get("b")).toBe(3);
     expect(m.get("c")).toBe(2);
   });
+
+  it("4e rang et suivants : 0 pt podium (3/2/1 seulement)", () => {
+    const m = computeRoundPodiumDeltas([
+      { playerId: "a", distance: 1, masterclass: false },
+      { playerId: "b", distance: 2, masterclass: false },
+      { playerId: "c", distance: 3, masterclass: false },
+      { playerId: "d", distance: 40, masterclass: false },
+    ]);
+    expect(m.get("a")).toBe(3);
+    expect(m.get("b")).toBe(2);
+    expect(m.get("c")).toBe(1);
+    expect(m.get("d")).toBeUndefined();
+  });
 });

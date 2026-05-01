@@ -18,6 +18,7 @@ export const GamePhaseSchema = z.enum([
   "round_constraint",
   "round_vote",
   "round_subresult",
+  "round_recap",
   "game_end",
 ]);
 export type GamePhase = z.infer<typeof GamePhaseSchema>;
@@ -47,6 +48,32 @@ export const RoundScoreRowSchema = z.object({
 });
 export type RoundScoreRow = z.infer<typeof RoundScoreRowSchema>;
 
+/** Récap après une manche complète (toutes les contraintes + tous les votes sur chaque dilemme). */
+export const RoundRecapAuthorRowSchema = z.object({
+  playerId: z.string(),
+  nickname: z.string(),
+  distanceFrom50: z.number(),
+  masterclass: z.boolean(),
+});
+export type RoundRecapAuthorRow = z.infer<typeof RoundRecapAuthorRowSchema>;
+
+export const RoundRecapPointsRowSchema = z.object({
+  playerId: z.string(),
+  nickname: z.string(),
+  delta: z.number(),
+  totalScore: z.number(),
+});
+export type RoundRecapPointsRow = z.infer<typeof RoundRecapPointsRowSchema>;
+
+export const RoundRecapPayloadSchema = z.object({
+  /** Manche terminée (0 = première offre). */
+  roundIndex: z.number(),
+  offerText: z.string(),
+  authors: z.array(RoundRecapAuthorRowSchema),
+  pointsThisRound: z.array(RoundRecapPointsRowSchema),
+});
+export type RoundRecapPayload = z.infer<typeof RoundRecapPayloadSchema>;
+
 export const ServerStatePayloadSchema = z.object({
   roomCode: z.string(),
   phase: GamePhaseSchema,
@@ -63,8 +90,12 @@ export const ServerStatePayloadSchema = z.object({
     .nullable(),
   constraintOpen: z.boolean(),
   voteOpen: z.boolean(),
+  /** Pendant un vote : false si tu es l’auteur du dilemme (tu ne votes pas). */
+  canVote: z.boolean(),
   lastVoteResult: LastVoteResultSchema.nullable(),
   lastRoundScores: z.array(RoundScoreRowSchema).nullable(),
+  /** Présent uniquement en phase `round_recap`. */
+  roundRecap: RoundRecapPayloadSchema.nullable(),
   message: z.string().optional(),
 });
 export type ServerStatePayload = z.infer<typeof ServerStatePayloadSchema>;

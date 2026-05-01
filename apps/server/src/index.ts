@@ -57,7 +57,11 @@ function broadcastRoom(room: GameRoom): void {
   if (!set) return;
   for (const sid of set) {
     const s = io.sockets.sockets.get(sid);
-    if (s) s.emit(SocketEvents.SERVER_STATE, room.toPublicState(sid));
+    if (s)
+      s.emit(
+        SocketEvents.SERVER_STATE,
+        room.toPublicState(sid, s.data.playerId),
+      );
   }
 }
 
@@ -114,7 +118,7 @@ io.on("connection", (socket: GameSocket) => {
     if (!room) return;
     const parsed = PlayerReadyPayloadSchema.safeParse(payload);
     if (!parsed.success) return;
-    room.setReady(socket.id, parsed.data.ready);
+    room.setReady(socket.id, parsed.data.ready, socket.data.playerId);
   });
 
   socket.on(SocketEvents.HOST_START_GAME, async () => {
@@ -134,7 +138,7 @@ io.on("connection", (socket: GameSocket) => {
     if (!room) return;
     const parsed = ConstraintSubmitPayloadSchema.safeParse(payload);
     if (!parsed.success) return;
-    const res = room.submitConstraint(socket.id, parsed.data.text);
+    const res = room.submitConstraint(socket.id, parsed.data.text, socket.data.playerId);
     if (!res.ok) socket.emit(SocketEvents.ERROR, { message: res.reason });
   });
 
@@ -145,7 +149,7 @@ io.on("connection", (socket: GameSocket) => {
     if (!room) return;
     const parsed = VoteCastPayloadSchema.safeParse(payload);
     if (!parsed.success) return;
-    const res = room.castVote(socket.id, parsed.data.value);
+    const res = room.castVote(socket.id, parsed.data.value, socket.data.playerId);
     if (!res.ok) socket.emit(SocketEvents.ERROR, { message: res.reason });
   });
 

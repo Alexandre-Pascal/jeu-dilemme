@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import type { GamePhase, ServerStatePayload } from "@dilemme/shared";
+import type { GamePhase, RoundRecapPayload, ServerStatePayload } from "@dilemme/shared";
 import type { AuthorRoundResult } from "./scoring.js";
 import { computeRoundPodiumDeltas, computeVoteDisplay } from "./scoring.js";
 
@@ -30,6 +30,8 @@ export class GameRoom {
   phase: GamePhase = "lobby";
   constraintSeconds = 60;
   voteSeconds = 60;
+  /** Pause « récap points » après chaque manche complète, avant l’offre suivante. */
+  recapSeconds = 15;
   offers: string[] = [];
   currentRoundIndex = 0;
   constraints = new Map<string, string>();
@@ -37,6 +39,7 @@ export class GameRoom {
   voteAuthorIndex = 0;
   votes = new Map<string, "yes" | "no">();
   roundAuthorResults: AuthorRoundResult[] = [];
+  roundRecapPayload: RoundRecapPayload | null = null;
   phaseEndsAt: number | null = null;
   private phaseTimer: ReturnType<typeof setTimeout> | null = null;
   private broadcast: () => void;
@@ -70,9 +73,24 @@ export class GameRoom {
     this.offers = texts;
   }
 
-  toPublicState(socketId: string): ServerStatePayload {
+  /**
+   * Associe la connexion Socket.io au joueur : d’abord par `playerId` mémorisé côté serveur au join
+   * (fiable après upgrade/reconnexion), sinon par `socketId` ; met à jour `player.socketId` si besoin.
+   */
+  resolvePlayer(socketId: string, clientPlayerId?: string | null): Player | undefined {
+    if (clientPlayerId) {
+      const byId = this.players.find((p) => p.id === clientPlayerId);
+      if (byId) {
+        if (byId.socketId !== socketId) byId.socketId = socketId;
+        return byId;
+      }
+    }
+    return this.players.find((p) => p.socketId === socketId);
+  }
+
+  toPublicState(socketId: string, clientPlayerId?: string | null): ServerStatePayload {
     const isHost = socketId === this.hostSocketId;
-    const self = this.players.find((p) => p.socketId === socketId);
+    const self = this.resolvePlayer(socketId, clientPlayerId ?? null);
     const offer =
       this.currentRoundIndex < this.offers.length
         ? (this.offers[this.currentRoundIndex] ?? null)
@@ -131,17 +149,21 @@ export class GameRoom {
       revealedDilemma,
       constraintOpen: this.phase === "round_constraint",
       voteOpen: this.phase === "round_vote",
+      canVote:
+        this.phase === "round_vote" && !!self && !!votingPlayer && self.id !== votingPlayer.id,
       lastVoteResult,
       lastRoundScores,
+      roundRecap: this.phase === "round_recap" && this.roundRecapPayload ? this.roundRecapPayload : null,
       message: undefined,
     };
   }
 
-  private lastVoteStatsFor(_authorId: string) {
+  private lastVoteStatsFor(authorId: string) {
     let yes = 0;
     let no = 0;
     let abstain = 0;
     for (const p of this.players) {
+      if (p.id === authorId) continue;
       const v = this.votes.get(p.id);
       if (v === "yes") yes++;
       else if (v === "no") no++;
@@ -168,8 +190,12 @@ export class GameRoom {
     return { ok: true, playerId: id };
   }
 
-  setReady(socketId: string, ready: boolean): { ok: true } | { ok: false; reason: string } {
-    const p = this.players.find((x) => x.socketId === socketId);
+  setReady(
+    socketId: string,
+    ready: boolean,
+    clientPlayerId?: string | null,
+  ): { ok: true } | { ok: false; reason: string } {
+    const p = this.resolvePlayer(socketId, clientPlayerId ?? null);
     if (!p) return { ok: false, reason: "Joueur introuvable" };
     p.ready = ready;
     this.broadcast();
@@ -199,6 +225,7 @@ export class GameRoom {
     this.phase = "round_constraint";
     this.constraints.clear();
     this.roundAuthorResults = [];
+    this.roundRecapPayload = null;
     this.voteAuthorIndex = 0;
     this.votes.clear();
     const ends = Date.now() + this.constraintSeconds * 1000;
@@ -222,14 +249,23 @@ export class GameRoom {
       this.clearPhaseTimer();
       this.phaseEndsAt = Date.now() + remaining;
       this.schedulePhaseEnd(remaining, () => this.endVotePhase());
+    } else if (this.phase === "round_recap" && this.phaseEndsAt) {
+      const remaining = Math.max(1000, this.phaseEndsAt - Date.now());
+      this.clearPhaseTimer();
+      this.phaseEndsAt = Date.now() + remaining;
+      this.schedulePhaseEnd(remaining, () => this.endRoundRecap());
     }
     this.broadcast();
     return { ok: true };
   }
 
-  submitConstraint(socketId: string, text: string): { ok: true } | { ok: false; reason: string } {
+  submitConstraint(
+    socketId: string,
+    text: string,
+    clientPlayerId?: string | null,
+  ): { ok: true } | { ok: false; reason: string } {
     if (this.phase !== "round_constraint") return { ok: false, reason: "Phase incorrecte" };
-    const p = this.players.find((x) => x.socketId === socketId);
+    const p = this.resolvePlayer(socketId, clientPlayerId ?? null);
     if (!p) return { ok: false, reason: "Seuls les joueurs envoient une contrainte" };
     this.constraints.set(p.id, text.trim());
     if (this.players.every((pl) => this.constraints.has(pl.id))) {
@@ -238,12 +274,20 @@ export class GameRoom {
     return { ok: true };
   }
 
-  castVote(socketId: string, value: "yes" | "no"): { ok: true } | { ok: false; reason: string } {
+  castVote(
+    socketId: string,
+    value: "yes" | "no",
+    clientPlayerId?: string | null,
+  ): { ok: true } | { ok: false; reason: string } {
     if (this.phase !== "round_vote") return { ok: false, reason: "Pas de vote en cours" };
-    const p = this.players.find((x) => x.socketId === socketId);
+    const author = this.players[this.voteAuthorIndex];
+    if (!author) return { ok: false, reason: "Aucun dilemme en vote" };
+    const p = this.resolvePlayer(socketId, clientPlayerId ?? null);
     if (!p) return { ok: false, reason: "Joueur introuvable" };
+    if (p.id === author.id) return { ok: false, reason: "Tu ne peux pas voter sur ton propre dilemme" };
     this.votes.set(p.id, value);
-    if (this.players.every((pl) => this.votes.has(pl.id))) {
+    const voters = this.players.filter((pl) => pl.id !== author.id);
+    if (voters.every((v) => this.votes.has(v.id))) {
       this.endVotePhase();
     } else this.broadcast();
     return { ok: true };
@@ -279,6 +323,7 @@ export class GameRoom {
     let no = 0;
     let abstain = 0;
     for (const p of this.players) {
+      if (p.id === author.id) continue;
       const v = this.votes.get(p.id);
       if (v === "yes") yes++;
       else if (v === "no") no++;
@@ -307,23 +352,60 @@ export class GameRoom {
       this.phaseEndsAt = ends;
       this.schedulePhaseEnd(this.voteSeconds * 1000, () => this.endVotePhase());
     } else {
+      const finishedRoundIndex = this.currentRoundIndex;
+      const finishedOffer = this.offers[this.currentRoundIndex] ?? "";
+      const authorSnapshot = [...this.roundAuthorResults];
       const deltas = computeRoundPodiumDeltas(this.roundAuthorResults);
       for (const p of this.players) {
         p.score += deltas.get(p.id) ?? 0;
       }
+      const nick = (id: string) => this.players.find((x) => x.id === id)?.nickname ?? id;
+      const recapAuthors: RoundRecapPayload["authors"] = authorSnapshot.map((r) => ({
+        playerId: r.playerId,
+        nickname: nick(r.playerId),
+        distanceFrom50: r.distance,
+        masterclass: r.masterclass,
+      }));
+      const pointsThisRound: RoundRecapPayload["pointsThisRound"] = [...this.players]
+        .map((p) => ({
+          playerId: p.id,
+          nickname: p.nickname,
+          delta: deltas.get(p.id) ?? 0,
+          totalScore: p.score,
+        }))
+        .sort((a, b) => b.totalScore - a.totalScore || b.delta - a.delta);
+
       this.roundAuthorResults = [];
       this.voteAuthorIndex = 0;
       this.constraints.clear();
       this.currentRoundIndex += 1;
-      if (this.currentRoundIndex >= this.offers.length) {
-        this.phase = "game_end";
-        this.phaseEndsAt = null;
-      } else {
-        this.phase = "round_constraint";
-        const ends = Date.now() + this.constraintSeconds * 1000;
-        this.phaseEndsAt = ends;
-        this.schedulePhaseEnd(this.constraintSeconds * 1000, () => this.endConstraintPhase());
-      }
+
+      this.roundRecapPayload = {
+        roundIndex: finishedRoundIndex,
+        offerText: finishedOffer,
+        authors: recapAuthors,
+        pointsThisRound,
+      };
+      this.phase = "round_recap";
+      const recapMs = this.recapSeconds * 1000;
+      this.phaseEndsAt = Date.now() + recapMs;
+      this.schedulePhaseEnd(recapMs, () => this.endRoundRecap());
+    }
+    this.broadcast();
+  }
+
+  private endRoundRecap(): void {
+    if (this.phase !== "round_recap") return;
+    this.clearPhaseTimer();
+    this.roundRecapPayload = null;
+    if (this.currentRoundIndex >= this.offers.length) {
+      this.phase = "game_end";
+      this.phaseEndsAt = null;
+    } else {
+      this.phase = "round_constraint";
+      const ends = Date.now() + this.constraintSeconds * 1000;
+      this.phaseEndsAt = ends;
+      this.schedulePhaseEnd(this.constraintSeconds * 1000, () => this.endConstraintPhase());
     }
     this.broadcast();
   }

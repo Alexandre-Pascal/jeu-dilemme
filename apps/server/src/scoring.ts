@@ -28,9 +28,10 @@ export function computeVoteDisplay(yes: number, no: number, abstain: number) {
 }
 
 /**
- * Attribue 3 / 2 / 1 pts aux trois premiers rangs de distance (plus petit = mieux),
- * avec ex-aequo sur la même distance : même nombre de points pour le groupe.
- * Bonus Masterclass (+5) en plus pour chaque auteur ayant eu 50/50 exact sur son vote.
+ * Fin de manche : classement **dense** sur la distance au 50/50 (plus petit = mieux).
+ * - Rang 1 → 3 pts, rang 2 → 2 pts, rang 3 → 1 pt, rangs 4+ → 0 (même avec 10 joueurs).
+ * - Ex-aequo : même distance = **même rang** → mêmes points (ex. deux 1ers → chacun 3 pts ; le suivant est rang 2 → 2 pts).
+ * Bonus Masterclass (+5) en plus par auteur ayant eu un vote 50/50 exact sur son dilemme.
  */
 export function computeRoundPodiumDeltas(results: AuthorRoundResult[]): Map<string, number> {
   const deltas = new Map<string, number>();
@@ -41,19 +42,15 @@ export function computeRoundPodiumDeltas(results: AuthorRoundResult[]): Map<stri
     return a.playerId.localeCompare(b.playerId);
   });
 
-  let podiumIndex = 0;
-  let i = 0;
-  while (i < sorted.length && podiumIndex < PODIUM_POINTS.length) {
-    const d = sorted[i].distance;
-    let j = i;
-    while (j < sorted.length && sorted[j].distance === d) j++;
-    const pts = PODIUM_POINTS[podiumIndex];
-    for (let k = i; k < j; k++) {
-      const id = sorted[k].playerId;
-      deltas.set(id, (deltas.get(id) ?? 0) + pts);
+  let rank = 0;
+  let lastDistance = Number.NaN;
+  for (const r of sorted) {
+    if (Number.isNaN(lastDistance) || r.distance !== lastDistance) {
+      rank += 1;
+      lastDistance = r.distance;
     }
-    podiumIndex += 1;
-    i = j;
+    const pts = rank === 1 ? PODIUM_POINTS[0] : rank === 2 ? PODIUM_POINTS[1] : rank === 3 ? PODIUM_POINTS[2] : 0;
+    if (pts > 0) deltas.set(r.playerId, (deltas.get(r.playerId) ?? 0) + pts);
   }
 
   for (const r of results) {
