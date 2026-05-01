@@ -5,6 +5,7 @@ import {
   SocketEvents,
   type ServerStatePayload,
 } from "@dilemme/shared";
+import { RulesBriefingPanel } from "../components/RulesBriefingPanel";
 import { VoteResultBar } from "../components/VoteResultBar";
 import { getAckReason, isRoomJoinOk } from "../socket-ack";
 import { createSocket } from "../socket";
@@ -201,6 +202,12 @@ export function PlayPage() {
           >
             {self?.ready ? "Annuler prêt" : "Je suis prêt"}
           </button>
+        </section>
+      ) : null}
+
+      {state?.phase === "rules_briefing" ? (
+        <section key="rules" className="d-phase-enter">
+          <RulesBriefingPanel isHost={false} />
         </section>
       ) : null}
 

@@ -7,9 +7,20 @@ import {
   SocketEvents,
   type ServerStatePayload,
 } from "@dilemme/shared";
+import { RulesBriefingPanel } from "../components/RulesBriefingPanel";
 import { VoteResultBar } from "../components/VoteResultBar";
 import { getAckReason, getHostCreateRoomCode } from "../socket-ack";
 import { createSocket } from "../socket";
+
+const HOST_PHASE_LABELS: Record<ServerStatePayload["phase"], string> = {
+  lobby: "Lobby — attente",
+  rules_briefing: "Règles · introduction",
+  round_constraint: "Manche — contraintes",
+  round_vote: "Manche — votes",
+  round_subresult: "Manche — résultat vote",
+  round_recap: "Manche — récap",
+  game_end: "Partie terminée",
+};
 
 export function HostPage() {
   const socket = useMemo(() => createSocket(), []);
@@ -59,6 +70,17 @@ export function HostPage() {
       }
     });
   }, [socket, createRoundCount, createUseAllOffers]);
+
+  const dismissRules = useCallback(() => {
+    setError(null);
+    socket.emit(SocketEvents.HOST_DISMISS_RULES, {}, (ack: unknown) => {
+      const o = typeof ack === "object" && ack !== null ? (ack as Record<string, unknown>) : null;
+      if (o && o.ok === false) {
+        const reason = getAckReason(ack);
+        if (reason) setError(reason);
+      }
+    });
+  }, [socket]);
 
   const startGame = useCallback(() => {
     setError(null);
@@ -162,6 +184,12 @@ export function HostPage() {
 
       {state ? (
         <>
+          {state.phase === "rules_briefing" ? (
+            <section key="rules" className="d-phase-enter d-rules-host-wrap">
+              <RulesBriefingPanel isHost onDismiss={dismissRules} />
+            </section>
+          ) : null}
+
           <section key="players" className="d-card d-phase-enter">
             <h2>Joueurs</h2>
             <ul className="d-list">
@@ -202,7 +230,7 @@ export function HostPage() {
           <section key="state" className="d-card d-phase-enter">
             <h2>État</h2>
             <p>
-              Phase : <strong>{state.phase}</strong>
+              Phase : <strong>{HOST_PHASE_LABELS[state.phase]}</strong>
             </p>
             {state.currentOfferText ? (
               <p>

@@ -97,10 +97,11 @@ export class GameRoom {
   toPublicState(socketId: string, clientPlayerId?: string | null): ServerStatePayload {
     const isHost = socketId === this.hostSocketId;
     const self = this.resolvePlayer(socketId, clientPlayerId ?? null);
-    const offer =
+    const offerRaw =
       this.currentRoundIndex < this.offers.length
         ? (this.offers[this.currentRoundIndex] ?? null)
         : null;
+    const offer = this.phase === "rules_briefing" ? null : offerRaw;
     const votingPlayer =
       this.phase === "round_vote" || this.phase === "round_subresult"
         ? (this.players[this.voteAuthorIndex] ?? null)
@@ -244,12 +245,22 @@ export class GameRoom {
         : allOffers.length;
     this.offers = allOffers.slice(0, cap);
     this.currentRoundIndex = 0;
-    this.phase = "round_constraint";
+    this.phase = "rules_briefing";
     this.constraints.clear();
     this.roundAuthorResults = [];
     this.roundRecapPayload = null;
     this.voteAuthorIndex = 0;
     this.votes.clear();
+    this.phaseEndsAt = null;
+    this.clearPhaseTimer();
+    this.broadcast();
+    return { ok: true };
+  }
+
+  hostDismissRules(socketId: string): { ok: true } | { ok: false; reason: string } {
+    if (socketId !== this.hostSocketId) return { ok: false, reason: "Réservé au MJ" };
+    if (this.phase !== "rules_briefing") return { ok: false, reason: "Pas à l’écran des règles" };
+    this.phase = "round_constraint";
     const ends = Date.now() + this.constraintSeconds * 1000;
     this.phaseEndsAt = ends;
     this.schedulePhaseEnd(this.constraintSeconds * 1000, () => this.endConstraintPhase());

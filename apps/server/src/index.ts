@@ -4,6 +4,7 @@ import Fastify from "fastify";
 import {
   ConstraintSubmitPayloadSchema,
   HostCreatePayloadSchema,
+  HostDismissRulesPayloadSchema,
   HostSetTimersPayloadSchema,
   PlayerReadyPayloadSchema,
   RecapSkipVotePayloadSchema,
@@ -130,6 +131,31 @@ io.on("connection", (socket: GameSocket) => {
     if (!room || socket.id !== room.hostSocketId) return;
     const res = await room.startGame(loadOfferTexts);
     if (!res.ok) socket.emit(SocketEvents.ERROR, { message: res.reason });
+    broadcastRoom(room);
+  });
+
+  socket.on(SocketEvents.HOST_DISMISS_RULES, (...args: unknown[]) => {
+    const ack = args[1] as ((r: unknown) => void) | undefined;
+    const code = socket.data.roomCode as string | undefined;
+    if (!code) {
+      ack?.({ ok: false, reason: "Pas de salle" });
+      return;
+    }
+    const room = roomsByCode.get(code);
+    if (!room || socket.id !== room.hostSocketId) {
+      ack?.({ ok: false, reason: "Réservé au MJ" });
+      return;
+    }
+    if (!HostDismissRulesPayloadSchema.safeParse(args[0] ?? {}).success) {
+      ack?.({ ok: false, reason: "Payload invalide" });
+      return;
+    }
+    const res = room.hostDismissRules(socket.id);
+    if (!res.ok) {
+      ack?.(res);
+      return;
+    }
+    ack?.({ ok: true });
     broadcastRoom(room);
   });
 

@@ -6,6 +6,8 @@ export const SocketEvents = {
   HOST_CREATE: "host:create",
   PLAYER_READY: "player:ready",
   HOST_START_GAME: "host:startGame",
+  /** MJ : fermer l’écran des règles et démarrer le chrono de la 1ʳᵉ manche (contraintes). */
+  HOST_DISMISS_RULES: "host:dismissRules",
   CONSTRAINT_SUBMIT: "constraint:submit",
   VOTE_CAST: "vote:cast",
   /** Chaque joueur peut voter pour terminer le récap avant la fin du chrono. */
@@ -17,6 +19,8 @@ export const SocketEvents = {
 
 export const GamePhaseSchema = z.enum([
   "lobby",
+  /** Après « Lancer la partie » : règles affichées jusqu’à action du MJ (pas de chrono). */
+  "rules_briefing",
   "round_constraint",
   "round_vote",
   "round_subresult",
@@ -134,6 +138,8 @@ export const RoomJoinPayloadSchema = z.object({
 export const PlayerReadyPayloadSchema = z.object({
   ready: z.boolean(),
 });
+
+export const HostDismissRulesPayloadSchema = z.object({});
 export const ConstraintSubmitPayloadSchema = z.object({
   text: z.string().max(500),
 });
