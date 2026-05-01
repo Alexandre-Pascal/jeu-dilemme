@@ -2,8 +2,10 @@ import { PrismaClient } from "@prisma/client";
 
 export const prisma = new PrismaClient();
 
+type OfferRow = { id: number; order: number; text: string };
+
 export async function loadOfferTexts(): Promise<string[]> {
-  const rows = await prisma.offer.findMany({ orderBy: { order: "asc" } });
+  const rows: OfferRow[] = await prisma.offer.findMany({ orderBy: { order: "asc" } });
   const texts = rows.map((r) => r.text);
   const limitRaw = process.env.TEST_OFFER_LIMIT?.trim();
   if (!limitRaw) return texts;
