@@ -7,17 +7,17 @@ type Props = {
 const STEPS: { title: string; body: string; accent: "violet" | "rose" | "amber" }[] = [
   {
     title: "Contraintes",
-    body: "À chaque manche, une offre apparaît. Sur ton téléphone, tu écris une suite « mais… » pour équilibrer le deal — le chrono tourne dès que le MJ a validé l’intro.",
+    body: "À chaque manche, une offre apparaît. Sur ton téléphone, tu complètes avec un « mais… » pour rendre le deal moins alléchant — le chrono part quand le MJ a fermé cet écran.",
     accent: "violet",
   },
   {
     title: "Votes Oui / Non",
-    body: "Ensuite, chaque dilemme (offre + contrainte d’un joueur) est voté à tour de rôle. Tu choisis Oui ou Non pour les autres ; sur le tien, ce sont les autres qui votent.",
+    body: "Chaque dilemme (offre + contrainte d’un joueur) est voté à la suite. Tu votes pour les autres ; sur le tien, tu ne votes pas : le groupe décide. Les abstentions ne comptent pas dans le pourcentage : seuls les Oui et Non exprimés forment le résultat.",
     accent: "rose",
   },
   {
-    title: "Scores & suite",
-    body: "Après chaque vote : le résultat s’affiche. En fin de manche : récap des points, puis manche suivante jusqu’à la fin de la partie.",
+    title: "Récap & manches suivantes",
+    body: "Après chaque vote, le résultat s’affiche. En fin de manche, le récap applique le barème ci-dessus, puis on enchaîne sur l’offre suivante jusqu’à la fin de la partie.",
     accent: "amber",
   },
 ];
@@ -34,6 +34,21 @@ export function RulesBriefingPanel({ isHost, onDismiss }: Props) {
           {isHost ? "Quand tu es prêt, tu lances la première manche." : "Le MJ déclenche la suite quand il veut."}
         </p>
       </header>
+
+      <div className="d-rules-callout" role="note">
+        <p className="d-rules-callout__block">
+          <strong>Objectif pour ton dilemme.</strong> Quand c’est ton « offre + mais… » qui est votée, tu veux que le groupe soit{" "}
+          <strong>le plus partagé possible entre Oui et Non</strong>, c’est-à-dire se rapprocher du{" "}
+          <strong>50&nbsp;% Oui / 50&nbsp;% Non</strong> (sur les votes Oui+Non uniquement). Un vote à 90&nbsp;% Oui ou 90&nbsp;% Non
+          est « très à fond » : pour toi, c’est moins bien qu’un vote serré autour du milieu.
+        </p>
+        <p className="d-rules-callout__block">
+          <strong>Points en fin de manche.</strong> Tous les dilemmes de la manche sont classés du plus proche du 50/50 au plus
+          éloigné. <strong>1er → 3 pts, 2e → 2 pts, 3e → 1 pt</strong>, les autres 0. À égalité d’écart au 50/50, même rang donc{" "}
+          <strong>mêmes points</strong> (ex.&nbsp;: deux ex-aequo 1ers → chacun 3 pts). Bonus <strong>Masterclass</strong> : si
+          tu as exactement autant de Oui que de Non (avec au moins un vote), <strong>+5 pts</strong> en plus sur ce dilemme.
+        </p>
+      </div>
 
       <ol className="d-rules-steps" aria-label="Déroulé d’une partie">
         {STEPS.map((s, i) => (

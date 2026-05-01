@@ -771,6 +771,36 @@ button:disabled {
   color: var(--text-muted);
 }
 
+.d-rules-callout {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.05rem;
+  border-radius: var(--radius-md);
+  text-align: left;
+  background: linear-gradient(135deg, rgba(237, 233, 254, 0.95) 0%, rgba(255, 255, 255, 0.92) 50%, rgba(254, 243, 199, 0.35) 100%);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.08);
+  animation: d-fade-up 0.5s ease-out 0.12s both;
+}
+
+.d-rules-callout__block {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: #334155;
+}
+
+.d-rules-callout__block + .d-rules-callout__block {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed rgba(124, 58, 237, 0.2);
+}
+
+.d-rules-callout strong {
+  color: var(--text);
+}
+
 .d-rules-steps {
   position: relative;
   z-index: 1;
