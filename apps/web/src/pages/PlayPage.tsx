@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -19,9 +18,7 @@ export function PlayPage() {
   const [joined, setJoined] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [constraint, setConstraint] = useState("");
-  /** Manche pour laquelle la contrainte a été envoyée (attente des autres). */
   const [constraintSentRoundIndex, setConstraintSentRoundIndex] = useState<number | null>(null);
-  /** Vote enregistré pour ce dilemme (manche + auteur). */
   const [voteSent, setVoteSent] = useState<{
     roundIndex: number;
     votingForPlayerId: string;
@@ -62,8 +59,7 @@ export function PlayPage() {
           setJoined(true);
           setConstraintSentRoundIndex(null);
           setVoteSent(null);
-        }
-        else {
+        } else {
           const reason = getAckReason(ack);
           if (reason) setError(reason);
         }
@@ -105,30 +101,44 @@ export function PlayPage() {
 
   if (!joined) {
     return (
-      <main style={{ padding: "1.25rem", maxWidth: 480, margin: "0 auto" }}>
-        <h1>Joueur</h1>
+      <main className="d-page d-page--narrow">
+        <header className="d-header">
+          <h1 className="d-title">Joueur</h1>
+          <p className="d-subtitle">Entre le code affiché par le MJ et ton pseudo pour rejoindre la salle.</p>
+        </header>
         {error ? (
-          <p style={{ color: "#b91c1c" }} role="alert">
+          <p className="d-alert--error" role="alert">
             {error}
           </p>
         ) : null}
-        <label style={stack}>
-          Code salle
-          <input value={roomCode} onChange={(e) => setRoomCode(e.target.value.toUpperCase())} autoCapitalize="characters" />
-        </label>
-        <label style={stack}>
-          Pseudo
-          <input value={nickname} onChange={(e) => setNickname(e.target.value)} maxLength={32} />
-        </label>
-        <button type="button" onClick={join} style={btnYes} disabled={!roomCode.trim() || !nickname.trim()}>
-          Rejoindre
-        </button>
+        <div className="d-card d-card--flush">
+          <label className="d-label">
+            Code salle
+            <input
+              className="d-input"
+              value={roomCode}
+              onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+              autoCapitalize="characters"
+            />
+          </label>
+          <label className="d-label">
+            Pseudo
+            <input className="d-input" value={nickname} onChange={(e) => setNickname(e.target.value)} maxLength={32} />
+          </label>
+          <button
+            type="button"
+            onClick={join}
+            className="d-btn d-btn--yes d-btn--block"
+            disabled={!roomCode.trim() || !nickname.trim()}
+          >
+            Rejoindre
+          </button>
+        </div>
       </main>
     );
   }
 
   const self = state?.players.find((p) => p.id === state.playerId);
-  /** Même logique que le serveur : évite un état incohérent si le socket a changé sans resync. */
   const canVoteOnCurrentDilemma =
     state?.phase === "round_vote" &&
     state.playerId != null &&
@@ -151,46 +161,58 @@ export function PlayPage() {
   const recapPayload = state?.phase === "round_recap" && state.roundRecap ? state.roundRecap : null;
 
   return (
-    <main style={{ padding: "1.25rem", maxWidth: 520, margin: "0 auto" }}>
-      <h1>Partie</h1>
+    <main className="d-page d-page--narrow">
+      <header className="d-header">
+        <h1 className="d-title">Partie</h1>
+        <p className="d-subtitle">Réponds aux offres, vote et grimpe au classement.</p>
+      </header>
+
       {error ? (
-        <p style={{ color: "#b91c1c" }} role="alert">
+        <p className="d-alert--error" role="alert">
           {error}
         </p>
       ) : null}
 
       {state?.phase === "lobby" ? (
-        <section style={card}>
+        <section key="lobby" className="d-card d-phase-enter">
           <p>
             Bienvenue <strong>{self?.nickname}</strong>
           </p>
-          <button type="button" onClick={() => setReady(!self?.ready)} style={self?.ready ? btnNo : btnYes}>
+          <button
+            type="button"
+            onClick={() => setReady(!self?.ready)}
+            className={`d-btn d-btn--block ${self?.ready ? "d-btn--secondary" : "d-btn--primary"}`}
+          >
             {self?.ready ? "Annuler prêt" : "Je suis prêt"}
           </button>
         </section>
       ) : null}
 
       {state?.phase === "round_constraint" ? (
-        <section style={card}>
-          <p style={{ fontSize: "1.1rem" }}>
+        <section key="constraint" className="d-card d-phase-enter">
+          <p className="d-offer-line">
             <strong>Offre :</strong> {state.currentOfferText}
           </p>
           {constraintAcknowledgedForCurrentRound ? (
             <>
-              <p style={{ marginTop: "0.75rem", padding: "1rem", borderRadius: 12, background: "#ecfdf5", color: "#166534" }}>
+              <div className="d-callout d-callout--success" style={{ marginTop: "0.75rem" }}>
                 <strong>Contrainte envoyée.</strong> En attente des autres joueurs…
-              </p>
-              {endsIn !== null ? <p style={{ marginTop: "0.5rem", color: "#555" }}>Chrono : {endsIn}s</p> : null}
+              </div>
+              {endsIn !== null ? (
+                <p className="d-muted" style={{ marginTop: "0.5rem" }}>
+                  Chrono : {endsIn}s
+                </p>
+              ) : null}
             </>
           ) : (
             <>
               <p>Écris ta contrainte (« mais… ») pour équilibrer le dilemme.</p>
-              {endsIn !== null ? <p>Chrono : {endsIn}s</p> : null}
+              {endsIn !== null ? <p className="d-muted">Chrono : {endsIn}s</p> : null}
               <textarea
+                className="d-textarea"
                 value={constraint}
                 onChange={(e) => setConstraint(e.target.value)}
                 rows={4}
-                style={{ width: "100%", fontSize: "1rem", padding: "0.75rem", marginTop: "0.5rem" }}
                 maxLength={500}
                 placeholder="Mais…"
               />
@@ -198,12 +220,7 @@ export function PlayPage() {
                 type="button"
                 onClick={submitConstraint}
                 disabled={!constraint.trim()}
-                style={{
-                  ...btnYes,
-                  marginTop: "0.75rem",
-                  width: "100%",
-                  opacity: constraint.trim() ? 1 : 0.5,
-                }}
+                className="d-btn d-btn--yes d-btn--block"
               >
                 Envoyer
               </button>
@@ -213,103 +230,93 @@ export function PlayPage() {
       ) : null}
 
       {state?.phase === "round_vote" && state.revealedDilemma ? (
-        <section style={card}>
-          <p style={{ fontSize: "1.05rem" }}>{state.revealedDilemma.offer}</p>
-          <p style={{ color: "#6d28d9", fontSize: "1.1rem" }}>Mais… {state.revealedDilemma.constraint}</p>
-          {endsIn !== null ? <p>Vote : {endsIn}s</p> : null}
+        <section key="vote" className="d-card d-phase-enter">
+          <p className="d-offer-line">{state.revealedDilemma.offer}</p>
+          <p className="d-constraint-line">Mais… {state.revealedDilemma.constraint}</p>
+          {endsIn !== null ? <p className="d-muted">Vote : {endsIn}s</p> : null}
           {canVoteOnCurrentDilemma && voteAcknowledgedForCurrentDilemma ? (
-            <p
-              style={{
-                marginTop: "1rem",
-                padding: "1rem",
-                borderRadius: 12,
-                background: voteSent?.value === "yes" ? "#ecfdf5" : "#fef2f2",
-                color: voteSent?.value === "yes" ? "#166534" : "#991b1b",
-                fontWeight: 700,
-              }}
+            <div
+              className={`d-callout ${voteSent?.value === "yes" ? "d-callout--success" : "d-callout--danger"}`}
+              style={{ marginTop: "1rem" }}
             >
               Tu as voté <strong>{voteSent?.value === "yes" ? "OUI" : "NON"}</strong>. En attente des autres…
-            </p>
+            </div>
           ) : null}
           {canVoteOnCurrentDilemma && !voteAcknowledgedForCurrentDilemma ? (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginTop: "1rem" }}>
-              <button type="button" style={btnYes} onClick={() => vote("yes")}>
+            <div className="d-btn-row">
+              <button type="button" className="d-btn--yes" onClick={() => vote("yes")}>
                 OUI
               </button>
-              <button type="button" style={btnNo} onClick={() => vote("no")}>
+              <button type="button" className="d-btn--no" onClick={() => vote("no")}>
                 NON
               </button>
             </div>
           ) : null}
           {!canVoteOnCurrentDilemma ? (
-            <p style={{ marginTop: "1rem", padding: "1rem", borderRadius: 12, background: "#f3e8ff", color: "#5b21b6" }}>
-              C’est <strong>ton</strong> dilemme : les autres votent Oui ou Non. Tu verras le résultat juste après.
-            </p>
+            <div className="d-callout d-callout--purple">C’est ton dilemme : les autres votent Oui ou Non. Tu verras le résultat juste après.</div>
           ) : null}
         </section>
       ) : null}
 
       {state?.phase === "round_subresult" && state.lastVoteResult ? (
-        <section style={card}>
+        <section key="subresult" className="d-card d-phase-enter">
           <h2>Résultat</h2>
           <p>
             {state.lastVoteResult.yesPct.toFixed(1)} % Oui — {state.lastVoteResult.noPct.toFixed(1)} % Non
           </p>
-          {state.lastRoundScores?.[0]?.masterclass ? <p style={{ color: "#b45309", fontWeight: 800 }}>Masterclass !</p> : null}
+          {state.lastRoundScores?.[0]?.masterclass ? <p className="d-masterclass">Masterclass !</p> : null}
         </section>
       ) : null}
 
       {recapPayload && state ? (
-        <section style={{ ...card, padding: "1.25rem" }}>
-          <p style={{ margin: 0, color: "#71717a", fontSize: "0.9rem" }}>
+        <section key="recap" className="d-card d-phase-enter">
+          <p className="d-muted" style={{ margin: 0, fontSize: "0.9rem" }}>
             Manche {recapPayload.roundIndex + 1} sur {state.totalRounds}
           </p>
-          <h2 style={{ margin: "0.2rem 0 1rem", fontSize: "1.35rem" }}>Récap</h2>
+          <h2 style={{ margin: "0.2rem 0 1rem", fontFamily: "var(--font-display)", fontSize: "1.35rem" }}>Récap</h2>
 
-          <div style={recapOfferBox}>
-            <span style={recapKicker}>L&apos;offre</span>
-            <p style={{ margin: "0.4rem 0 0", fontSize: "1.08rem", lineHeight: 1.45, color: "#18181b" }}>
-              {recapPayload.offerText}
-            </p>
+          <div className="d-recap-offer">
+            <span className="d-kicker">L&apos;offre</span>
+            <p>{recapPayload.offerText}</p>
           </div>
 
-          <p style={{ margin: "1.35rem 0 0.35rem", fontWeight: 700, fontSize: "1rem" }}>Les votes sur chaque dilemme</p>
-          <p style={{ margin: "0 0 0.75rem", color: "#71717a", fontSize: "0.88rem", lineHeight: 1.4 }}>
+          <p className="d-section-title">Les votes sur chaque dilemme</p>
+          <p className="d-section-hint">
             Un indicateur bas = vote très équilibré entre Oui et Non. Un indicateur haut = vote très à fond.
           </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+          <div className="d-recap-authors">
             {recapPayload.authors.map((a, i) => (
-              <div key={a.playerId} style={recapAuthorCard}>
-                <div style={{ fontSize: "0.75rem", color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+              <div key={a.playerId} className="d-recap-author">
+                <div className="d-recap-author-meta">
                   Dilemme n° {i + 1} / {recapPayload.authors.length}
                 </div>
-                <div style={{ fontWeight: 800, fontSize: "1.05rem", marginTop: "0.15rem" }}>{a.nickname}</div>
-                <div style={{ fontSize: "0.92rem", color: "#3f3f46", marginTop: "0.35rem" }}>
+                <div className="d-recap-author-name">{a.nickname}</div>
+                <div className="d-recap-author-stat">
                   Indicateur d&apos;équilibre : <strong>{a.distanceFrom50.toFixed(1)}</strong>
                 </div>
                 {a.masterclass ? (
-                  <div style={recapMasterclassBadge}>Masterclass — vote 50/50 exact · +5 pts bonus au classement</div>
+                  <div className="d-pill--warn">Masterclass — vote 50/50 exact · +5 pts bonus au classement</div>
                 ) : null}
               </div>
             ))}
           </div>
 
-          <p style={{ margin: "1.35rem 0 0.5rem", fontWeight: 700, fontSize: "1rem" }}>Points après cette manche</p>
-          <div style={{ overflowX: "auto", borderRadius: 12, border: "1px solid #e4e4e7" }}>
-            <table style={recapTable}>
+          <p className="d-section-title">Points après cette manche</p>
+          <div className="d-table-wrap">
+            <table className="d-table-recap">
               <thead>
-                <tr style={{ background: "#fafafa" }}>
-                  <th style={recapTh}>Joueur</th>
-                  <th style={recapTh}>Cette manche</th>
-                  <th style={{ ...recapTh, textAlign: "right" as const }}>Total</th>
+                <tr>
+                  <th>Joueur</th>
+                  <th>Cette manche</th>
+                  <th className="d-table-recap__num">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {recapPayload.pointsThisRound.map((r) => (
                   <tr key={r.playerId}>
-                    <td style={recapTd}>{r.nickname}</td>
-                    <td style={recapTd}>{r.delta > 0 ? `+${r.delta}` : String(r.delta)}</td>
-                    <td style={{ ...recapTd, textAlign: "right" as const, fontWeight: 800 }}>{r.totalScore}</td>
+                    <td>{r.nickname}</td>
+                    <td>{r.delta > 0 ? `+${r.delta}` : String(r.delta)}</td>
+                    <td className="d-table-recap__num">{r.totalScore}</td>
                   </tr>
                 ))}
               </tbody>
@@ -317,15 +324,7 @@ export function PlayPage() {
           </div>
 
           {state.recapSkipProgress ? (
-            <div
-              style={{
-                marginTop: "1.1rem",
-                padding: "1rem",
-                borderRadius: 12,
-                background: "#f8fafc",
-                border: "1px solid #e2e8f0",
-              }}
-            >
+            <div className="d-callout--skip">
               <p style={{ margin: 0, fontSize: "0.95rem", color: "#475569" }}>
                 Pour passer avant la fin du chrono :{" "}
                 <strong>
@@ -339,7 +338,7 @@ export function PlayPage() {
                     Tu as voté pour passer — en attente des autres…
                   </p>
                 ) : (
-                  <button type="button" onClick={voteSkipRecap} style={btnSkipRecap}>
+                  <button type="button" onClick={voteSkipRecap} className="d-btn--skip">
                     Passer le récap
                   </button>
                 )
@@ -348,7 +347,7 @@ export function PlayPage() {
           ) : null}
 
           {endsIn !== null ? (
-            <p style={{ marginTop: "1rem", padding: "0.85rem", borderRadius: 12, background: "#f4f4f5", color: "#3f3f46", textAlign: "center" }}>
+            <p className="d-callout--muted" style={{ marginTop: "1rem" }}>
               Suite automatiquement dans <strong>{endsIn}s</strong> si personne ne valide avant.
             </p>
           ) : null}
@@ -356,9 +355,9 @@ export function PlayPage() {
       ) : null}
 
       {state?.phase === "game_end" ? (
-        <section style={card}>
+        <section key="end" className="d-card d-phase-enter">
           <h2>Fin de partie</h2>
-          <ol style={{ paddingLeft: "1.25rem", margin: 0 }}>
+          <ol className="d-leaderboard">
             {[...state.players]
               .sort((a, b) => b.score - a.score)
               .map((p) => (
@@ -371,7 +370,7 @@ export function PlayPage() {
       ) : null}
 
       {state && state.phase !== "lobby" && state.phase !== "game_end" ? (
-        <p style={{ marginTop: "1rem", color: "#555" }}>
+        <p className="d-score-footer">
           Ton score : <strong>{self?.score ?? 0}</strong>
         </p>
       ) : null}
@@ -393,101 +392,3 @@ function useCountdown(phaseEndsAt: number | null): number | null {
   }, [phaseEndsAt]);
   return left;
 }
-
-const btnYes: CSSProperties = {
-  padding: "1rem",
-  borderRadius: 14,
-  border: "none",
-  background: "#16a34a",
-  color: "#fff",
-  fontWeight: 800,
-  fontSize: "1.1rem",
-};
-
-const btnNo: CSSProperties = {
-  ...btnYes,
-  background: "#dc2626",
-};
-
-const card: CSSProperties = {
-  marginTop: "1rem",
-  padding: "1rem",
-  borderRadius: 14,
-  background: "#fff",
-  boxShadow: "0 4px 20px rgba(15,15,18,0.06)",
-};
-
-const stack: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: "0.35rem",
-  marginBottom: "0.75rem",
-};
-
-const recapOfferBox: CSSProperties = {
-  padding: "1rem 1.1rem",
-  borderRadius: 14,
-  background: "linear-gradient(135deg, #faf5ff 0%, #f4f4f5 100%)",
-  border: "1px solid #e9d5ff",
-};
-
-const recapKicker: CSSProperties = {
-  fontSize: "0.72rem",
-  fontWeight: 700,
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-  color: "#7c3aed",
-};
-
-const recapAuthorCard: CSSProperties = {
-  padding: "0.85rem 1rem",
-  borderRadius: 12,
-  background: "#fafafa",
-  border: "1px solid #e4e4e7",
-};
-
-const recapMasterclassBadge: CSSProperties = {
-  marginTop: "0.45rem",
-  padding: "0.35rem 0.5rem",
-  borderRadius: 8,
-  fontSize: "0.82rem",
-  fontWeight: 700,
-  color: "#9a3412",
-  background: "#ffedd5",
-  display: "inline-block",
-};
-
-const recapTable: CSSProperties = {
-  width: "100%",
-  borderCollapse: "collapse",
-  fontSize: "0.95rem",
-};
-
-const recapTh: CSSProperties = {
-  textAlign: "left",
-  padding: "0.65rem 0.85rem",
-  fontWeight: 700,
-  fontSize: "0.78rem",
-  textTransform: "uppercase",
-  letterSpacing: "0.04em",
-  color: "#71717a",
-  borderBottom: "1px solid #e4e4e7",
-};
-
-const recapTd: CSSProperties = {
-  padding: "0.65rem 0.85rem",
-  borderBottom: "1px solid #f4f4f5",
-  color: "#27272a",
-};
-
-const btnSkipRecap: CSSProperties = {
-  marginTop: "0.75rem",
-  padding: "0.65rem 1.1rem",
-  borderRadius: 12,
-  border: "1px solid #64748b",
-  background: "#fff",
-  color: "#334155",
-  fontWeight: 700,
-  fontSize: "0.95rem",
-  cursor: "pointer",
-};
