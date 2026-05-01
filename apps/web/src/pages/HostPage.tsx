@@ -166,6 +166,54 @@ export function HostPage() {
                 (abstentions : {state.lastVoteResult.abstainCount})
               </p>
             ) : null}
+            {state.phase === "round_recap" && state.roundRecap ? (
+              <div style={{ marginTop: "1rem", padding: "1rem", borderRadius: 14, background: "#fafafa", border: "1px solid #e4e4e7" }}>
+                <p style={{ margin: 0, color: "#71717a", fontSize: "0.85rem" }}>
+                  Manche {state.roundRecap.roundIndex + 1} sur {state.totalRounds}
+                </p>
+                <h3 style={{ margin: "0.2rem 0 0.75rem" }}>Récap</h3>
+                <div style={{ padding: "0.75rem", borderRadius: 12, background: "#faf5ff", border: "1px solid #e9d5ff", marginBottom: "0.75rem" }}>
+                  <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#7c3aed", letterSpacing: "0.06em" }}>L&apos;OFFRE</span>
+                  <p style={{ margin: "0.35rem 0 0", fontSize: "0.95rem" }}>{state.roundRecap.offerText}</p>
+                </div>
+                <p style={{ margin: "0 0 0.35rem", fontWeight: 700, fontSize: "0.88rem" }}>Votes (indicateur bas = équilibré)</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", marginBottom: "0.75rem" }}>
+                  {state.roundRecap.authors.map((a, i) => (
+                    <div
+                      key={a.playerId}
+                      style={{ padding: "0.5rem 0.65rem", borderRadius: 10, background: "#fff", border: "1px solid #e4e4e7", fontSize: "0.88rem" }}
+                    >
+                      <span style={{ color: "#a1a1aa", fontSize: "0.72rem" }}>n°{i + 1}</span>{" "}
+                      <strong>{a.nickname}</strong> — {a.distanceFrom50.toFixed(1)}
+                      {a.masterclass ? <span style={{ color: "#c2410c", fontWeight: 600 }}> · Masterclass +5</span> : null}
+                    </div>
+                  ))}
+                </div>
+                <p style={{ margin: "0 0 0.35rem", fontWeight: 700, fontSize: "0.88rem" }}>Points</p>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.88rem" }}>
+                  <thead>
+                    <tr style={{ background: "#f4f4f5" }}>
+                      <th style={{ textAlign: "left", padding: "0.4rem 0.5rem", color: "#71717a" }}>Joueur</th>
+                      <th style={{ textAlign: "left", padding: "0.4rem 0.5rem", color: "#71717a" }}>Manche</th>
+                      <th style={{ textAlign: "right", padding: "0.4rem 0.5rem", color: "#71717a" }}>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {state.roundRecap.pointsThisRound.map((r) => (
+                      <tr key={r.playerId}>
+                        <td style={{ padding: "0.45rem 0.5rem", borderTop: "1px solid #e4e4e7" }}>{r.nickname}</td>
+                        <td style={{ padding: "0.45rem 0.5rem", borderTop: "1px solid #e4e4e7" }}>
+                          {r.delta > 0 ? `+${r.delta}` : r.delta}
+                        </td>
+                        <td style={{ padding: "0.45rem 0.5rem", borderTop: "1px solid #e4e4e7", textAlign: "right", fontWeight: 700 }}>
+                          {r.totalScore}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : null}
             {state.phase === "game_end" ? <p style={{ fontSize: "1.25rem" }}>Partie terminée.</p> : null}
           </section>
         </>
