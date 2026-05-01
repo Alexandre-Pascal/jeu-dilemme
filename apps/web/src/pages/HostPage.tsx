@@ -120,6 +120,11 @@ export function HostPage() {
   return (
     <main className="d-page">
       <header className="d-header">
+        {!state || state.phase === "lobby" || state.phase === "game_end" ? (
+          <Link to="/" className="d-btn d-btn--ghost d-btn--sm d-back-btn">
+            ← Accueil
+          </Link>
+        ) : null}
         <h1 className="d-title">Maître du jeu</h1>
         <p className="d-subtitle">Pilote la partie, partage le code salle et suis l’avancement en direct.</p>
       </header>

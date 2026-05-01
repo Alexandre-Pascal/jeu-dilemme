@@ -1806,6 +1806,12 @@ button:disabled {
   color: rgba(255, 255, 255, 0.75);
 }
 
+.d-back-btn {
+  display: inline-flex;
+  margin-bottom: 0.6rem;
+  opacity: 0.7;
+}
+
 /* ── Offers management page ─────────────────────────────────── */
 .d-offers-add-row {
   display: flex;

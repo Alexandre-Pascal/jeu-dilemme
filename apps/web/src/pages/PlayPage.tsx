@@ -105,6 +105,9 @@ export function PlayPage() {
     return (
       <main className="d-page d-page--narrow">
         <header className="d-header">
+          <a href="/" className="d-btn d-btn--ghost d-btn--sm d-back-btn">
+            ← Accueil
+          </a>
           <h1 className="d-title">Joueur</h1>
           <p className="d-subtitle">Entre le code affiché par le MJ et ton pseudo pour rejoindre la salle.</p>
         </header>
