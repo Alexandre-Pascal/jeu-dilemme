@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import type { GamePhase, RoundRecapPayload, ServerStatePayload } from "@dilemme/shared";
+import type { OfferEntry } from "./prisma.js";
 import type { AuthorRoundResult } from "./scoring.js";
 import { computeRoundPodiumDeltas, computeVoteDisplay } from "./scoring.js";
 
@@ -33,6 +34,8 @@ export class GameRoom {
   /** Pause « récap points » après chaque manche complète, avant l’offre suivante. */
   recapSeconds = 15;
   offers: string[] = [];
+  /** IDs parallèles à `offers` — même index. */
+  offerIds: number[] = [];
   /** Limite MJ à la création de salle ; `null` = charger toutes les offres au démarrage. */
   plannedRoundCount: number | null = null;
   /** IDs d'offres spécifiques choisis par le MJ ; `null` = pas de sélection personnalisée. */
@@ -83,8 +86,9 @@ export class GameRoom {
     }, ms);
   }
 
-  setOffers(texts: string[]): void {
-    this.offers = texts;
+  setOffers(entries: OfferEntry[]): void {
+    this.offers = entries.map((e) => e.text);
+    this.offerIds = entries.map((e) => e.id);
   }
 
   /**
@@ -181,6 +185,7 @@ export class GameRoom {
               selfHasSkipped: self ? this.recapSkipVotes.has(self.id) : false,
             }
           : null,
+      playedOfferIds: this.phase === "game_end" ? this.offerIds : null,
       message: undefined,
     };
   }
@@ -242,7 +247,7 @@ export class GameRoom {
     return true;
   }
 
-  async startGame(loadOffers: () => Promise<string[]>): Promise<{ ok: true } | { ok: false; reason: string }> {
+  async startGame(loadOffers: () => Promise<OfferEntry[]>): Promise<{ ok: true } | { ok: false; reason: string }> {
     if (this.players.length < 1) return { ok: false, reason: "Au moins un joueur requis" };
     if (!this.players.every((p) => p.ready)) return { ok: false, reason: "Tous les joueurs doivent être prêts" };
     const allOffers = await loadOffers();
@@ -251,7 +256,9 @@ export class GameRoom {
       this.plannedRoundCount != null
         ? Math.min(Math.max(1, this.plannedRoundCount), allOffers.length)
         : allOffers.length;
-    this.offers = allOffers.slice(0, cap);
+    const sliced = allOffers.slice(0, cap);
+    this.offers = sliced.map((e) => e.text);
+    this.offerIds = sliced.map((e) => e.id);
     this.currentRoundIndex = 0;
     this.phase = "rules_briefing";
     this.constraints.clear();

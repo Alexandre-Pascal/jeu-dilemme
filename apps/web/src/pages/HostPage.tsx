@@ -117,6 +117,19 @@ export function HostPage() {
   const hostRoundRecap =
     state && state.phase === "round_recap" && state.roundRecap ? state.roundRecap : null;
 
+  // Quand la partie se termine, mémoriser les offres jouées en localStorage
+  useEffect(() => {
+    if (state?.phase === "game_end" && state.playedOfferIds && state.playedOfferIds.length > 0) {
+      try {
+        const existing: number[] = JSON.parse(localStorage.getItem("dilemme:playedOfferIds") ?? "[]");
+        const merged = Array.from(new Set([...existing, ...state.playedOfferIds]));
+        localStorage.setItem("dilemme:playedOfferIds", JSON.stringify(merged));
+      } catch {
+        localStorage.setItem("dilemme:playedOfferIds", JSON.stringify(state.playedOfferIds));
+      }
+    }
+  }, [state?.phase, state?.playedOfferIds]);
+
   return (
     <main className="d-page">
       <header className="d-header">

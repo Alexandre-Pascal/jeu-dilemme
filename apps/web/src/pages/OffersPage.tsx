@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 const API = import.meta.env.VITE_SERVER_URL ?? "http://localhost:3001";
-const LS_KEY = "dilemme:selectedOfferIds";
+const LS_SELECTED = "dilemme:selectedOfferIds";
+const LS_PLAYED = "dilemme:playedOfferIds";
 
 type Offer = { id: number; order: number; text: string; category: string };
 
 export function loadSelectedOfferIds(): number[] | null {
   try {
-    const raw = localStorage.getItem(LS_KEY);
+    const raw = localStorage.getItem(LS_SELECTED);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed) || parsed.length === 0) return null;
@@ -19,8 +20,22 @@ export function loadSelectedOfferIds(): number[] | null {
 }
 
 function saveSelectedOfferIds(ids: number[] | null): void {
-  if (!ids || ids.length === 0) localStorage.removeItem(LS_KEY);
-  else localStorage.setItem(LS_KEY, JSON.stringify(ids));
+  if (!ids || ids.length === 0) localStorage.removeItem(LS_SELECTED);
+  else localStorage.setItem(LS_SELECTED, JSON.stringify(ids));
+}
+
+function loadPlayedOfferIds(): Set<number> {
+  try {
+    const raw = localStorage.getItem(LS_PLAYED);
+    if (!raw) return new Set();
+    return new Set(JSON.parse(raw) as number[]);
+  } catch {
+    return new Set();
+  }
+}
+
+function resetPlayedOfferIds(): void {
+  localStorage.removeItem(LS_PLAYED);
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -33,15 +48,26 @@ const CATEGORY_ICONS: Record<string, string> = {
   "Vie quotidienne": "🏠",
 };
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j]!, a[i]!];
+  }
+  return a;
+}
+
 export function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [played, setPlayed] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [newText, setNewText] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [adding, setAdding] = useState(false);
+  const [drawCount, setDrawCount] = useState(20);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const fetchOffers = useCallback(async () => {
@@ -57,6 +83,7 @@ export function OffersPage() {
         const existing = new Set(data.map((o) => o.id));
         setSelected(new Set(storedIds.filter((id) => existing.has(id))));
       }
+      setPlayed(loadPlayedOfferIds());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Impossible de charger les offres");
     } finally {
@@ -89,20 +116,29 @@ export function OffersPage() {
     setSaved(false);
   };
 
-  const selectAll = () => {
-    setSelected(new Set(offers.map((o) => o.id)));
-    setSaved(false);
-  };
-
-  const deselectAll = () => {
-    setSelected(new Set());
-    setSaved(false);
-  };
+  const selectAll = () => { setSelected(new Set(offers.map((o) => o.id))); setSaved(false); };
+  const deselectAll = () => { setSelected(new Set()); setSaved(false); };
 
   const saveSelection = () => {
     const ids = selected.size > 0 ? [...selected] : null;
     saveSelectedOfferIds(ids);
     setSaved(true);
+  };
+
+  const drawRandom = (excludePlayed: boolean) => {
+    const pool = excludePlayed
+      ? offers.filter((o) => !played.has(o.id))
+      : [...offers];
+    const n = Math.min(drawCount, pool.length);
+    if (n === 0) return;
+    const drawn = shuffle(pool).slice(0, n);
+    setSelected(new Set(drawn.map((o) => o.id)));
+    setSaved(false);
+  };
+
+  const handleResetPlayed = () => {
+    resetPlayedOfferIds();
+    setPlayed(new Set());
   };
 
   const addOffer = async () => {
@@ -132,11 +168,7 @@ export function OffersPage() {
     try {
       const res = await fetch(`${API}/api/offers/${id}`, { method: "DELETE" });
       if (!res.ok && res.status !== 204) throw new Error(`Erreur ${res.status}`);
-      setSelected((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
+      setSelected((prev) => { const next = new Set(prev); next.delete(id); return next; });
       setSaved(false);
       await fetchOffers();
     } catch (e) {
@@ -144,15 +176,17 @@ export function OffersPage() {
     }
   };
 
-  // Grouper les offres par catégorie
   const grouped = offers.reduce<Record<string, Offer[]>>((acc, o) => {
     const cat = o.category || "Sans catégorie";
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(o);
     return acc;
   }, {});
-
   const categories = Object.keys(grouped).sort();
+
+  const unplayedCount = offers.filter((o) => !played.has(o.id)).length;
+  const playedCount = played.size;
+
   const selectionLabel =
     selected.size === 0
       ? "Toutes les offres utilisées (aucune sélection)"
@@ -165,14 +199,71 @@ export function OffersPage() {
           ← Retour MJ
         </Link>
         <h1 className="d-title">Gérer les dilemmes</h1>
-        <p className="d-subtitle">Sélectionne des paquets ou des offres individuelles pour la prochaine partie.</p>
+        <p className="d-subtitle">Sélectionne des paquets ou tire au sort parmi les offres non encore jouées.</p>
       </header>
 
-      {error ? (
-        <p className="d-alert--error" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <p className="d-alert--error" role="alert">{error}</p> : null}
+
+      {/* Tirage aléatoire */}
+      <section className="d-card d-offers-draw-card">
+        <h2>Tirage aléatoire</h2>
+        <div className="d-offers-draw-stats">
+          <span className="d-offers-draw-stat">
+            <strong>{unplayedCount}</strong> non jouée{unplayedCount !== 1 ? "s" : ""}
+          </span>
+          <span className="d-offers-draw-sep">·</span>
+          <span className="d-offers-draw-stat d-offers-draw-stat--played">
+            <strong>{playedCount}</strong> déjà jouée{playedCount !== 1 ? "s" : ""}
+          </span>
+          {playedCount > 0 ? (
+            <button
+              type="button"
+              className="d-btn d-btn--ghost d-btn--sm"
+              onClick={handleResetPlayed}
+              title="Marquer toutes les offres comme non jouées"
+            >
+              Réinitialiser les joués
+            </button>
+          ) : null}
+        </div>
+
+        <div className="d-offers-draw-row">
+          <label className="d-label-row" style={{ flex: 1 }}>
+            Nombre d'offres
+            <input
+              type="number"
+              className="d-input d-input--narrow"
+              min={1}
+              max={offers.length}
+              value={drawCount}
+              onChange={(e) => setDrawCount(Math.max(1, Number.parseInt(e.target.value, 10) || 1))}
+            />
+          </label>
+        </div>
+        <div className="d-offers-draw-btns">
+          <button
+            type="button"
+            className="d-btn d-btn--primary d-btn--block"
+            onClick={() => drawRandom(true)}
+            disabled={unplayedCount === 0}
+          >
+            🎲 Tirer parmi les non jouées ({unplayedCount})
+          </button>
+          <button
+            type="button"
+            className="d-btn d-btn--secondary d-btn--block"
+            onClick={() => drawRandom(false)}
+            disabled={offers.length === 0}
+          >
+            Tirer parmi toutes ({offers.length})
+          </button>
+        </div>
+        {unplayedCount === 0 && playedCount > 0 ? (
+          <p className="d-muted" style={{ fontSize: "0.82rem", marginTop: "0.5rem" }}>
+            Toutes les offres ont été jouées. Clique sur « Réinitialiser les joués » pour repartir de zéro.
+          </p>
+        ) : null}
+      </section>
 
       {/* Barre de sélection sticky */}
       <div className="d-offers-sticky-bar">
@@ -190,7 +281,7 @@ export function OffersPage() {
         </div>
       </div>
 
-      {/* Catégories / paquets */}
+      {/* Catégories */}
       {loading ? (
         <p className="d-connecting">Chargement…</p>
       ) : (
@@ -204,53 +295,54 @@ export function OffersPage() {
 
           return (
             <section key={cat} className="d-card d-offers-cat-card">
-              {/* En-tête paquet */}
               <div className="d-offers-cat-header">
                 <label className="d-offers-cat-label">
                   <input
                     type="checkbox"
                     className="d-offers-checkbox"
                     checked={allSelected}
-                    ref={(el) => {
-                      if (el) el.indeterminate = someSelected && !allSelected;
-                    }}
+                    ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
                     onChange={() => toggleCategory(catIds)}
                   />
                   <span className="d-offers-cat-icon" aria-hidden>{icon}</span>
                   <span className="d-offers-cat-name">{cat}</span>
                 </label>
-                <span className="d-offers-cat-count">
-                  {selectedCount}/{catOffers.length}
-                </span>
+                <span className="d-offers-cat-count">{selectedCount}/{catOffers.length}</span>
               </div>
 
-              {/* Liste des offres */}
               <ul className="d-offers-list">
-                {catOffers.map((offer) => (
-                  <li
-                    key={offer.id}
-                    className={`d-offers-item${selected.has(offer.id) ? " d-offers-item--selected" : ""}`}
-                  >
-                    <label className="d-offers-item-label">
-                      <input
-                        type="checkbox"
-                        checked={selected.has(offer.id)}
-                        onChange={() => toggle(offer.id)}
-                        className="d-offers-checkbox"
-                      />
-                      <span className="d-offers-item-text">{offer.text}</span>
-                    </label>
-                    <button
-                      type="button"
-                      className="d-btn d-btn--ghost d-btn--sm d-offers-delete"
-                      onClick={() => deleteOffer(offer.id)}
-                      aria-label={`Supprimer : ${offer.text}`}
-                      title="Supprimer"
+                {catOffers.map((offer) => {
+                  const isPlayed = played.has(offer.id);
+                  const isSelected = selected.has(offer.id);
+                  return (
+                    <li
+                      key={offer.id}
+                      className={`d-offers-item${isSelected ? " d-offers-item--selected" : ""}${isPlayed ? " d-offers-item--played" : ""}`}
                     >
-                      ✕
-                    </button>
-                  </li>
-                ))}
+                      <label className="d-offers-item-label">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggle(offer.id)}
+                          className="d-offers-checkbox"
+                        />
+                        <span className="d-offers-item-text">{offer.text}</span>
+                      </label>
+                      {isPlayed ? (
+                        <span className="d-offers-played-badge" aria-label="Déjà jouée">✓</span>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="d-btn d-btn--ghost d-btn--sm d-offers-delete"
+                        onClick={() => deleteOffer(offer.id)}
+                        aria-label={`Supprimer : ${offer.text}`}
+                        title="Supprimer"
+                      >
+                        ✕
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           );
@@ -281,9 +373,7 @@ export function OffersPage() {
             disabled={adding}
           >
             <option value="">— Catégorie (optionnel) —</option>
-            {categories.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
           <button
             type="button"

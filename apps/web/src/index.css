@@ -1947,3 +1947,48 @@ button:disabled {
   border-top: 1px solid rgba(255,255,255,0.07);
   padding-top: 0.75rem;
 }
+
+/* Tirage aléatoire */
+.d-offers-draw-card h2 {
+  margin-bottom: 0.6rem;
+}
+.d-offers-draw-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+}
+.d-offers-draw-sep {
+  color: rgba(255,255,255,0.3);
+}
+.d-offers-draw-stat--played {
+  color: rgba(255,255,255,0.5);
+}
+.d-offers-draw-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+.d-offers-draw-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* Badge "joué" */
+.d-offers-item--played .d-offers-item-text {
+  opacity: 0.5;
+}
+.d-offers-played-badge {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.06);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.3rem;
+  margin-right: 0.15rem;
+}

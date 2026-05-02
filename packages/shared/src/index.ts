@@ -120,7 +120,9 @@ export const ServerStatePayloadSchema = z.object({
   /** Présent uniquement en phase `round_recap`. */
   roundRecap: RoundRecapPayloadSchema.nullable(),
   /** Présent en `round_recap` : votes pour passer le récap avant la fin du timer. */
-  recapSkipProgress: RecapSkipProgressSchema.nullable(),
+      recapSkipProgress: RecapSkipProgressSchema.nullable(),
+  /** IDs des offres jouées durant la partie — fourni uniquement en phase `game_end`. */
+  playedOfferIds: z.array(z.number().int().positive()).nullable(),
   message: z.string().optional(),
 });
 export type ServerStatePayload = z.infer<typeof ServerStatePayloadSchema>;

@@ -14,7 +14,7 @@ import {
 } from "@dilemme/shared";
 import { createRequire } from "node:module";
 import { GameRoom } from "./game-room.js";
-import { loadOffersByIds, loadOfferTexts, prisma } from "./prisma.js";
+import { loadOffers, loadOffersByIds, prisma } from "./prisma.js";
 
 type GameSocket = {
   id: string;
@@ -176,7 +176,7 @@ io.on("connection", (socket: GameSocket) => {
     if (!room || socket.id !== room.hostSocketId) return;
     const loader = room.selectedOfferIds
       ? () => loadOffersByIds(room.selectedOfferIds!)
-      : loadOfferTexts;
+      : loadOffers;
     const res = await room.startGame(loader);
     if (!res.ok) socket.emit(SocketEvents.ERROR, { message: res.reason });
     broadcastRoom(room);
