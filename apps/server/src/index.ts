@@ -55,13 +55,22 @@ fastify.get("/api/offers", async () => {
 });
 
 /** Ajoute une nouvelle offre. */
-fastify.post<{ Body: { text: string } }>("/api/offers", {
-  schema: { body: { type: "object", required: ["text"], properties: { text: { type: "string", minLength: 1, maxLength: 500 } } } },
+fastify.post<{ Body: { text: string; category?: string } }>("/api/offers", {
+  schema: {
+    body: {
+      type: "object",
+      required: ["text"],
+      properties: {
+        text: { type: "string", minLength: 1, maxLength: 500 },
+        category: { type: "string", maxLength: 100 },
+      },
+    },
+  },
 }, async (req, reply) => {
-  const { text } = req.body;
+  const { text, category = "" } = req.body;
   const max = await prisma.offer.aggregate({ _max: { order: true } });
   const nextOrder = (max._max.order ?? 0) + 1;
-  const offer = await prisma.offer.create({ data: { text: text.trim(), order: nextOrder } });
+  const offer = await prisma.offer.create({ data: { text: text.trim(), category: category.trim(), order: nextOrder } });
   reply.code(201);
   return offer;
 });

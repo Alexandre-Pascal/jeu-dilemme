@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 export const prisma = new PrismaClient();
 
-export type OfferRow = { id: number; order: number; text: string };
+export type OfferRow = { id: number; order: number; text: string; category: string };
 
 export async function loadOfferTexts(): Promise<string[]> {
   const rows: OfferRow[] = await prisma.offer.findMany({ orderBy: { order: "asc" } });

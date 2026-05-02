@@ -1822,33 +1822,79 @@ button:disabled {
   flex: 1;
 }
 
-.d-offers-toolbar {
+/* Barre sticky en haut */
+.d-offers-sticky-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
-  margin-bottom: 0.5rem;
+  background: var(--bg, #0f172a);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0.75rem;
 }
-.d-offers-toolbar-actions {
+.d-offers-sticky-label {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.7);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.d-offers-sticky-actions {
   display: flex;
   gap: 0.4rem;
+  flex-shrink: 0;
 }
 
-.d-offers-selection-label {
-  font-size: 0.85rem;
-  margin-bottom: 0.75rem;
+/* Carte catégorie */
+.d-offers-cat-card {
+  padding-bottom: 0.5rem;
+}
+.d-offers-cat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.d-offers-cat-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+.d-offers-cat-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.d-offers-cat-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.d-offers-cat-count {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.5);
+  flex-shrink: 0;
 }
 
 .d-offers-list {
   list-style: none;
   padding: 0;
-  margin: 0 0 1rem;
+  margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  max-height: 60vh;
-  overflow-y: auto;
+  gap: 0.25rem;
 }
 
 .d-offers-item {
@@ -1856,14 +1902,14 @@ button:disabled {
   align-items: center;
   gap: 0.5rem;
   border-radius: 0.5rem;
-  padding: 0.4rem 0.5rem;
+  padding: 0.35rem 0.5rem;
   background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.05);
   transition: background 0.15s;
 }
 .d-offers-item--selected {
   background: rgba(99,102,241,0.12);
-  border-color: rgba(99,102,241,0.35);
+  border-color: rgba(99,102,241,0.3);
 }
 .d-offers-item-label {
   flex: 1;
@@ -1874,7 +1920,7 @@ button:disabled {
   min-width: 0;
 }
 .d-offers-item-text {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   line-height: 1.35;
   white-space: nowrap;
   overflow: hidden;
@@ -1888,7 +1934,7 @@ button:disabled {
 }
 .d-offers-delete {
   flex-shrink: 0;
-  opacity: 0.45;
+  opacity: 0.35;
   font-size: 0.75rem;
   padding: 0.15rem 0.4rem;
 }

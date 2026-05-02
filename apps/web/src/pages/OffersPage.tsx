@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const API = import.meta.env.VITE_SERVER_URL ?? "http://localhost:3001";
 const LS_KEY = "dilemme:selectedOfferIds";
 
-type Offer = { id: number; order: number; text: string };
+type Offer = { id: number; order: number; text: string; category: string };
 
 export function loadSelectedOfferIds(): number[] | null {
   try {
@@ -23,6 +23,16 @@ function saveSelectedOfferIds(ids: number[] | null): void {
   else localStorage.setItem(LS_KEY, JSON.stringify(ids));
 }
 
+const CATEGORY_ICONS: Record<string, string> = {
+  "Richesse & succès": "💸",
+  "Super-pouvoirs": "🦸",
+  "Esprit & perception": "🧠",
+  "Santé & bien-être": "❤️",
+  "Social & influence": "🎭",
+  "Talent & savoir": "🎓",
+  "Vie quotidienne": "🏠",
+};
+
 export function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -30,6 +40,7 @@ export function OffersPage() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [newText, setNewText] = useState("");
+  const [newCategory, setNewCategory] = useState("");
   const [adding, setAdding] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -67,6 +78,17 @@ export function OffersPage() {
     setSaved(false);
   };
 
+  const toggleCategory = (ids: number[]) => {
+    const allSelected = ids.every((id) => selected.has(id));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allSelected) ids.forEach((id) => next.delete(id));
+      else ids.forEach((id) => next.add(id));
+      return next;
+    });
+    setSaved(false);
+  };
+
   const selectAll = () => {
     setSelected(new Set(offers.map((o) => o.id)));
     setSaved(false);
@@ -92,7 +114,7 @@ export function OffersPage() {
       const res = await fetch(`${API}/api/offers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, category: newCategory.trim() }),
       });
       if (!res.ok) throw new Error(`Erreur ${res.status}`);
       setNewText("");
@@ -122,6 +144,15 @@ export function OffersPage() {
     }
   };
 
+  // Grouper les offres par catégorie
+  const grouped = offers.reduce<Record<string, Offer[]>>((acc, o) => {
+    const cat = o.category || "Sans catégorie";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(o);
+    return acc;
+  }, {});
+
+  const categories = Object.keys(grouped).sort();
   const selectionLabel =
     selected.size === 0
       ? "Toutes les offres utilisées (aucune sélection)"
@@ -130,11 +161,11 @@ export function OffersPage() {
   return (
     <main className="d-page">
       <header className="d-header">
-        <Link to="/host" className="d-btn d-btn--ghost d-btn--sm" style={{ marginBottom: "0.5rem" }}>
+        <Link to="/host" className="d-btn d-btn--ghost d-btn--sm d-back-btn">
           ← Retour MJ
         </Link>
         <h1 className="d-title">Gérer les dilemmes</h1>
-        <p className="d-subtitle">Ajoutez des offres, cochez celles à utiliser pour la prochaine partie.</p>
+        <p className="d-subtitle">Sélectionne des paquets ou des offres individuelles pour la prochaine partie.</p>
       </header>
 
       {error ? (
@@ -142,6 +173,89 @@ export function OffersPage() {
           {error}
         </p>
       ) : null}
+
+      {/* Barre de sélection sticky */}
+      <div className="d-offers-sticky-bar">
+        <span className="d-offers-sticky-label">{selectionLabel}</span>
+        <div className="d-offers-sticky-actions">
+          <button type="button" className="d-btn d-btn--ghost d-btn--sm" onClick={selectAll}>Tout</button>
+          <button type="button" className="d-btn d-btn--ghost d-btn--sm" onClick={deselectAll}>Aucun</button>
+          <button
+            type="button"
+            className={`d-btn d-btn--sm ${saved ? "d-btn--secondary" : "d-btn--primary"}`}
+            onClick={saveSelection}
+          >
+            {saved ? "✓ Enregistré" : "Enregistrer"}
+          </button>
+        </div>
+      </div>
+
+      {/* Catégories / paquets */}
+      {loading ? (
+        <p className="d-connecting">Chargement…</p>
+      ) : (
+        categories.map((cat) => {
+          const catOffers = grouped[cat]!;
+          const catIds = catOffers.map((o) => o.id);
+          const allSelected = catIds.every((id) => selected.has(id));
+          const someSelected = catIds.some((id) => selected.has(id));
+          const icon = CATEGORY_ICONS[cat] ?? "📦";
+          const selectedCount = catIds.filter((id) => selected.has(id)).length;
+
+          return (
+            <section key={cat} className="d-card d-offers-cat-card">
+              {/* En-tête paquet */}
+              <div className="d-offers-cat-header">
+                <label className="d-offers-cat-label">
+                  <input
+                    type="checkbox"
+                    className="d-offers-checkbox"
+                    checked={allSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = someSelected && !allSelected;
+                    }}
+                    onChange={() => toggleCategory(catIds)}
+                  />
+                  <span className="d-offers-cat-icon" aria-hidden>{icon}</span>
+                  <span className="d-offers-cat-name">{cat}</span>
+                </label>
+                <span className="d-offers-cat-count">
+                  {selectedCount}/{catOffers.length}
+                </span>
+              </div>
+
+              {/* Liste des offres */}
+              <ul className="d-offers-list">
+                {catOffers.map((offer) => (
+                  <li
+                    key={offer.id}
+                    className={`d-offers-item${selected.has(offer.id) ? " d-offers-item--selected" : ""}`}
+                  >
+                    <label className="d-offers-item-label">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(offer.id)}
+                        onChange={() => toggle(offer.id)}
+                        className="d-offers-checkbox"
+                      />
+                      <span className="d-offers-item-text">{offer.text}</span>
+                    </label>
+                    <button
+                      type="button"
+                      className="d-btn d-btn--ghost d-btn--sm d-offers-delete"
+                      onClick={() => deleteOffer(offer.id)}
+                      aria-label={`Supprimer : ${offer.text}`}
+                      title="Supprimer"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })
+      )}
 
       {/* Ajouter une offre */}
       <section className="d-card">
@@ -151,15 +265,26 @@ export function OffersPage() {
             ref={inputRef}
             type="text"
             className="d-input d-offers-add-input"
-            placeholder="Ex. Tu peux voler mais tu dors les pieds en l'air..."
+            placeholder="Ex. Tu peux voler mais tu dors les pieds en l'air…"
             value={newText}
             onChange={(e) => setNewText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") addOffer();
-            }}
+            onKeyDown={(e) => { if (e.key === "Enter") addOffer(); }}
             maxLength={500}
             disabled={adding}
           />
+        </div>
+        <div className="d-offers-add-row" style={{ marginTop: "0.5rem" }}>
+          <select
+            className="d-input"
+            value={newCategory}
+            onChange={(e) => setNewCategory(e.target.value)}
+            disabled={adding}
+          >
+            <option value="">— Catégorie (optionnel) —</option>
+            {categories.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
           <button
             type="button"
             className="d-btn d-btn--primary"
@@ -171,68 +296,11 @@ export function OffersPage() {
         </div>
       </section>
 
-      {/* Sélection + liste */}
-      <section className="d-card">
-        <div className="d-offers-toolbar">
-          <h2 style={{ margin: 0 }}>
-            Offres ({offers.length})
-          </h2>
-          <div className="d-offers-toolbar-actions">
-            <button type="button" className="d-btn d-btn--ghost d-btn--sm" onClick={selectAll}>
-              Tout cocher
-            </button>
-            <button type="button" className="d-btn d-btn--ghost d-btn--sm" onClick={deselectAll}>
-              Tout décocher
-            </button>
-          </div>
-        </div>
-
-        <p className="d-muted d-offers-selection-label">{selectionLabel}</p>
-
-        {loading ? (
-          <p className="d-connecting">Chargement…</p>
-        ) : (
-          <ul className="d-offers-list">
-            {offers.map((offer) => (
-              <li key={offer.id} className={`d-offers-item${selected.has(offer.id) ? " d-offers-item--selected" : ""}`}>
-                <label className="d-offers-item-label">
-                  <input
-                    type="checkbox"
-                    checked={selected.has(offer.id)}
-                    onChange={() => toggle(offer.id)}
-                    className="d-offers-checkbox"
-                  />
-                  <span className="d-offers-item-text">{offer.text}</span>
-                </label>
-                <button
-                  type="button"
-                  className="d-btn d-btn--ghost d-btn--sm d-offers-delete"
-                  onClick={() => deleteOffer(offer.id)}
-                  aria-label={`Supprimer : ${offer.text}`}
-                  title="Supprimer"
-                >
-                  ✕
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <div className="d-offers-footer">
-          <button
-            type="button"
-            className="d-btn d-btn--primary d-btn--block"
-            onClick={saveSelection}
-          >
-            {saved ? "✓ Sélection enregistrée" : "Enregistrer la sélection"}
-          </button>
-          <p className="d-muted" style={{ fontSize: "0.8rem", marginTop: "0.4rem", textAlign: "center" }}>
-            {selected.size === 0
-              ? "Sans sélection, toutes les offres seront utilisées."
-              : `Seules les ${selected.size} offres cochées seront utilisées pour la prochaine partie créée.`}
-          </p>
-        </div>
-      </section>
+      <p className="d-muted" style={{ fontSize: "0.8rem", textAlign: "center", marginBottom: "4rem" }}>
+        {selected.size === 0
+          ? "Sans sélection, toutes les offres seront utilisées."
+          : `Seules les ${selected.size} offres cochées seront utilisées pour la prochaine partie créée.`}
+      </p>
     </main>
   );
 }
